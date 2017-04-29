@@ -10,41 +10,100 @@ use std::ffi::CString;
 use std::collections::HashMap;
 use std::string;
 
-pub struct RuglConfig {
-    pub vert: Option<&'static str>,
-    pub frag: Option<&'static str>,
-    pub attributes: Vec<(String, Vec<GLfloat>)>
+pub struct Environment {
+    pub window: glutin::Window
 }
 
 pub struct Rugl {
-    pub config: RuglConfig
+    environment: Environment
+}
+
+pub fn init() -> Rugl {
+    let window = glutin::Window::new().unwrap();
+
+    // It is essential to make the context current before calling `gl::load_with`.
+    unsafe { window.make_current() }.unwrap();
+
+    // Load the OpenGL function pointers
+    // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
+    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
+
+    Rugl {
+        environment: Environment {
+            window: window
+        }
+    }
 }
 
 impl Rugl {
-    pub fn new() -> Rugl {
-        Rugl {
-            config: RuglConfig {
+    pub fn draw(&self) -> DrawBuilder {
+        DrawBuilder::new(&self.environment)
+    }
+
+    pub fn frame<F>(&self, callback: F) where
+        F: Fn()
+    {
+        for event in self.environment.window.wait_events() {
+            unsafe {
+                // Clear the screen to black
+                // gl::ClearColor(0.3, 0.2, 0.3, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+            }
+            callback();
+
+            self.environment.window.swap_buffers().unwrap();
+
+            if let glutin::Event::Closed = event {
+                break;
+            }
+        }
+    }
+}
+
+pub struct DrawConfig<'env> {
+    pub environment: &'env Environment,
+    pub vert: Option<&'static str>,
+    pub frag: Option<&'static str>,
+    pub attributes: Vec<(String, Vec<GLfloat>)>,
+    pub count: i32
+}
+
+pub struct DrawBuilder<'env> {
+    pub config: DrawConfig<'env>
+}
+
+impl<'env> DrawBuilder<'env> {
+    pub fn new<'a>(environment: &'a Environment) -> DrawBuilder {
+        DrawBuilder {
+            config: DrawConfig {
+                environment: environment,
                 vert: None,
                 frag: None,
-                attributes: Vec::new()
+                attributes: Vec::new(),
+                count: 0
             }
         }
     }
 
-    pub fn vert(mut self, source: &'static str) -> Rugl {
+    pub fn vert(mut self, source: &'static str) -> DrawBuilder<'env> {
         self.config.vert = Some(source);
         self
     }
 
-    pub fn frag(mut self, source: &'static str) -> Rugl {
+    pub fn frag(mut self, source: &'static str) -> DrawBuilder<'env> {
         self.config.frag = Some(source);
         self
     }
 
-    pub fn attribute(mut self, name: &str, vertices: Vec<GLfloat>) -> Rugl {
+    pub fn attribute(mut self, name: &str, vertices: Vec<GLfloat>) -> DrawBuilder<'env> {
         self.config.attributes.push(
             (name.to_string(), vertices)
         );
+        self
+    }
+
+    pub fn count(mut self, count: i32) -> DrawBuilder<'env> {
+        self.config.count = count;
         self
     }
 
@@ -60,7 +119,7 @@ impl Rugl {
         };
 
         let program = match (vertex_shader, fragment_shader) {
-            (Some(fs), Some(vs)) => Some(unsafe { gl_helpers::link_program(&vs, &fs) }),
+            (Some(vs), Some(fs)) => Some(unsafe { gl_helpers::link_program(&vs, &fs) }),
             _ => None
         };
 
@@ -82,41 +141,42 @@ impl Rugl {
             }
         }).collect();
 
+        let count = config.count;
+
         return Box::new(move || {
-            // TODO - This hashmap for looking up buffers is a mess. We need
-            // to find a better way to do this.
+            #[cfg(feature = "debug_draw")]
+            println!("----------------------------------------------------");
+
+            match program {
+                Some(program) => {
+                    #[cfg(feature = "debug_draw")]
+                    println!("gl::UseProgram(program:{:?})", program);
+                    unsafe {
+                        gl::UseProgram(program);
+                        gl::BindFragDataLocation(program, 0,
+                                                 CString::new("out_color").unwrap().as_ptr());
+
+                    };
+                },
+                None => {}
+            };
 
             for i in 0..programs_attributes.len() {
                 let attribute_info = programs_attributes.get(i).unwrap();
                 let buffer = buffers[i];
                 match buffer {
                     Some(vbo) => unsafe {
-                        println!("Binding the attribute {:?}", attribute_info.name);
+                        // println!("Binding the attribute {:?}", attribute_info.name);
                         gl_helpers::bind_attribute_buffer(vbo, attribute_info)
                     },
                     None => {}
                 }
             }
-
-            // for (name, _) in config.attributes.iter() {
-            //     let vbo = buffers.get(name).unwrap();
-            //     unsafe { gl_helpers::bind_attribute_buffer(*vbo, 0, 3) };
-            // }
+            #[cfg(feature = "debug_draw")]
+            println!("gl::DrawArrays(gl::TRIANGLES, 0, {:?})", count);
+            unsafe { gl::DrawArrays(gl::TRIANGLES, 0, count) };
         })
     }
-}
-
-pub fn init() -> Box<Fn() -> Rugl> {
-    let window = glutin::Window::new().unwrap();
-
-    // It is essential to make the context current before calling `gl::load_with`.
-    unsafe { window.make_current() }.unwrap();
-
-    // Load the OpenGL function pointers
-    // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
-    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
-
-    Box::new(Rugl::new)
 }
 
 #[cfg(test)]
@@ -125,9 +185,8 @@ mod rugl_tests {
 
     #[test]
     fn test_the_buider_pattern() {
-
-        let rugl = init();
-        let draw = rugl()
+        let rugl = Rugl::new();
+        let draw = rugl.draw()
             .vert("
                 #version 150
                 in vec2 position;
@@ -148,8 +207,11 @@ mod rugl_tests {
                  0.5, -0.5,
                 -0.5, -0.5
             ])
+            .count(3)
             .finalize();
 
-        draw();
+        rugl.frame(|| {
+            draw();
+        });
     }
 }

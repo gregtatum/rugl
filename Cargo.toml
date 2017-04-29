@@ -6,3 +6,6 @@ authors = ["Greg Tatum <tatum.creative@gmail.com>"]
 [dependencies]
 glutin = "0.7.4"
 gl = "0.6.1"
+
+[features]
+debug_draw = []

@@ -124,8 +124,8 @@ fn main() {
     for event in window.wait_events() {
         unsafe {
             // Clear the screen to black
-            gl::ClearColor(0.3, 0.3, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            // gl::ClearColor(0.3, 0.3, 0.3, 1.0);
+            // gl::Clear(gl::COLOR_BUFFER_BIT);
 
             // Draw a triangle from the 3 vertices
             gl::DrawArrays(gl::TRIANGLES, 0, 3);
