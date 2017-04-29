@@ -45,8 +45,7 @@ impl Rugl {
     {
         for event in self.environment.window.wait_events() {
             unsafe {
-                // Clear the screen to black
-                // gl::ClearColor(0.3, 0.2, 0.3, 1.0);
+                gl::ClearColor(0.3, 0.2, 0.3, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT);
             }
             callback();
@@ -110,16 +109,16 @@ impl<'env> DrawBuilder<'env> {
     pub fn finalize(self) -> Box<Fn()> {
         let config = self.config;
         let vertex_shader = match config.vert {
-            Some(vert) => Some(unsafe { gl_helpers::compile_shader(vert, gl::VERTEX_SHADER) }),
+            Some(vert) => Some(gl_helpers::compile_shader(vert, gl::VERTEX_SHADER)),
             None => None
         };
         let fragment_shader = match config.frag {
-            Some(frag) => Some(unsafe { gl_helpers::compile_shader(frag, gl::FRAGMENT_SHADER) }),
+            Some(frag) => Some(gl_helpers::compile_shader(frag, gl::FRAGMENT_SHADER)),
             None => None
         };
 
         let program = match (vertex_shader, fragment_shader) {
-            (Some(vs), Some(fs)) => Some(unsafe { gl_helpers::link_program(&vs, &fs) }),
+            (Some(vs), Some(fs)) => Some(gl_helpers::link_program(&vs, &fs)),
             _ => None
         };
 
@@ -136,7 +135,7 @@ impl<'env> DrawBuilder<'env> {
                 });
 
             match attribute_config {
-                Some(&(_, ref values)) => { Some(unsafe { gl_helpers::create_buffer(&values) }) },
+                Some(&(_, ref values)) => { Some(gl_helpers::create_buffer(&values)) },
                 _ => None
             }
         }).collect();
@@ -144,20 +143,11 @@ impl<'env> DrawBuilder<'env> {
         let count = config.count;
 
         return Box::new(move || {
-            #[cfg(feature = "debug_draw")]
+            #[cfg(feature = "log_draw")]
             println!("----------------------------------------------------");
 
             match program {
-                Some(program) => {
-                    #[cfg(feature = "debug_draw")]
-                    println!("gl::UseProgram(program:{:?})", program);
-                    unsafe {
-                        gl::UseProgram(program);
-                        gl::BindFragDataLocation(program, 0,
-                                                 CString::new("out_color").unwrap().as_ptr());
-
-                    };
-                },
+                Some(program) => gl_helpers::use_program(program),
                 None => {}
             };
 
@@ -165,16 +155,11 @@ impl<'env> DrawBuilder<'env> {
                 let attribute_info = programs_attributes.get(i).unwrap();
                 let buffer = buffers[i];
                 match buffer {
-                    Some(vbo) => unsafe {
-                        // println!("Binding the attribute {:?}", attribute_info.name);
-                        gl_helpers::bind_attribute_buffer(vbo, attribute_info)
-                    },
+                    Some(vbo) => gl_helpers::bind_attribute_buffer(vbo, attribute_info),
                     None => {}
                 }
             }
-            #[cfg(feature = "debug_draw")]
-            println!("gl::DrawArrays(gl::TRIANGLES, 0, {:?})", count);
-            unsafe { gl::DrawArrays(gl::TRIANGLES, 0, count) };
+            gl_helpers::draw_arrays(gl::TRIANGLES, 0, count);
         })
     }
 }

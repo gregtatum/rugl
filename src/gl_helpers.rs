@@ -6,6 +6,15 @@ use std::str;
 use std::mem;
 use std::fmt;
 
+macro_rules! log_draw {
+    ($($arg:tt)*) => {
+        {
+            #[cfg(feature = "log_draw")]
+            println!($($arg)*);
+        }
+    };
+}
+
 pub struct AttributeInfo {
     pub name: String,
     pub index: GLuint,
@@ -35,232 +44,219 @@ impl fmt::Debug for AttributeInfo {
     }
 }
 
-pub unsafe fn compile_shader(source: &str, shader_type: GLenum) -> GLuint {
-    #[cfg(feature = "debug_draw")]
-    println!("gl::CreateShader(shader_type:{})", match shader_type {
-        gl::VERTEX_SHADER => "gl::VERTEX_SHADER",
-        gl::FRAGMENT_SHADER => "gl::FRAGMENT_SHADER",
-        _ => "Unknown shader type"
-    });
-    let shader = gl::CreateShader(shader_type);
-    #[cfg(feature = "debug_draw")]
-    println!("gl::CreateShader -> {:?}", shader);
+pub fn compile_shader(source: &str, shader_type: GLenum) -> GLuint {
+    unsafe {
+        log_draw!("gl::CreateShader(shader_type:{})", gl_shader_type_enum_to_string(shader_type));
+        let shader = gl::CreateShader(shader_type);
+        log_draw!("gl::CreateShader -> {:?}", shader);
 
-    // Attempt to compile the shader
-    let c_str = CString::new(source.as_bytes()).unwrap();
-    #[cfg(feature = "debug_draw")]
-    println!("\"{}\n\"", source);
-    println!("gl::ShaderSource(shader:{:?}, count:{:?}, source:{:?}, ptr::null())", shader, 1, &c_str.as_ptr());
-    gl::ShaderSource(shader, 1, &c_str.as_ptr(), ptr::null());
+        // Attempt to compile the shader
+        let c_str = CString::new(source.as_bytes()).unwrap();
+        log_draw!("\"{}\n\"", source);
+        log_draw!("gl::ShaderSource(shader:{:?}, count:{:?}, source:{:?}, ptr::null())", shader, 1, &c_str.as_ptr());
+        gl::ShaderSource(shader, 1, &c_str.as_ptr(), ptr::null());
 
-    #[cfg(feature = "debug_draw")]
-    println!("gl::CompileShader({:?})", shader);
-    gl::CompileShader(shader);
+        log_draw!("gl::CompileShader({:?})", shader);
+        gl::CompileShader(shader);
 
-    // Get the compile status
-    let mut status: GLint = mem::uninitialized();
-    #[cfg(feature = "debug_draw")]
-    println!("gl::GetShaderiv(shader:{:?}, gl::COMPILE_STATUS, *status)", shader);
-    gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
-    #[cfg(feature = "debug_draw")]
-    println!("    status -> {}", status);
+        // Get the compile status
+        let mut status: GLint = mem::uninitialized();
+        log_draw!("gl::GetShaderiv(shader:{:?}, gl::COMPILE_STATUS, *status)", shader);
+        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
+        log_draw!("    status -> {}", status);
 
-    // Fail on error
-    if status != (gl::TRUE as GLint) {
-        let mut log_length: GLint = mem::uninitialized();
-        gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut log_length);
-        let mut log = Vec::with_capacity(log_length as usize);
-        log.set_len((log_length as usize) - 1); // subtract 1 to skip the trailing null character
-        gl::GetShaderInfoLog(shader, log_length, ptr::null_mut(), log.as_mut_ptr() as *mut GLchar);
-        panic!("There was an error compiling the shader: {}", str::from_utf8(&log).ok().expect("ShaderInfoLog not valid utf8"));
+        // Fail on error
+        if status != (gl::TRUE as GLint) {
+            let mut log_length: GLint = mem::uninitialized();
+            gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut log_length);
+            let mut log = Vec::with_capacity(log_length as usize);
+            log.set_len((log_length as usize) - 1); // subtract 1 to skip the trailing null character
+            gl::GetShaderInfoLog(shader, log_length, ptr::null_mut(), log.as_mut_ptr() as *mut GLchar);
+            panic!("There was an error compiling the shader: {}", str::from_utf8(&log).ok().expect("ShaderInfoLog not valid utf8"));
+        }
+        shader
     }
-    shader
 }
 
-pub unsafe fn link_program(vertex_shader: &GLuint, fragment_shader: &GLuint) -> GLuint {
-    let program = gl::CreateProgram();
-    #[cfg(feature = "debug_draw")]
-    println!("gl::CreateProgram() -> {:?}", program);
-    #[cfg(feature = "debug_draw")]
-    println!("gl::AttachShader(program:{:?}, vertex_shader:{:?})", program, *vertex_shader);
-    gl::AttachShader(program, *vertex_shader);
-    #[cfg(feature = "debug_draw")]
-    println!("gl::AttachShader(program:{:?}, fragment_shader:{:?})", program, *fragment_shader);
-    gl::AttachShader(program, *fragment_shader);
-    #[cfg(feature = "debug_draw")]
-    println!("gl::LinkProgram(program:{:?})", program);
-    gl::LinkProgram(program);
+pub fn link_program(vertex_shader: &GLuint, fragment_shader: &GLuint) -> GLuint {
+    unsafe {
+        let program = gl::CreateProgram();
+        log_draw!("gl::CreateProgram() -> {:?}", program);
+        log_draw!("gl::AttachShader(program:{:?}, vertex_shader:{:?})", program, *vertex_shader);
+        gl::AttachShader(program, *vertex_shader);
+        log_draw!("gl::AttachShader(program:{:?}, fragment_shader:{:?})", program, *fragment_shader);
+        gl::AttachShader(program, *fragment_shader);
+        log_draw!("gl::LinkProgram(program:{:?})", program);
+        gl::LinkProgram(program);
 
-    // Get the link status
-    let mut status: GLint = mem::uninitialized();
-    println!("gl::GetProgramiv(program:{:?}, gl::LINK_STATUS, &mut status)", program);
-    gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
-    #[cfg(feature = "debug_draw")]
-    println!("    status -> {}", status);
+        // Get the link status
+        let mut status: GLint = mem::uninitialized();
+        log_draw!("gl::GetProgramiv(program:{:?}, gl::LINK_STATUS, &mut status)", program);
+        gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
+        log_draw!("    status -> {}", status);
 
-    // Fail on error
-    if status != (gl::TRUE as GLint) {
-        let mut log_length: GLint = mem::uninitialized();
-        gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut log_length);
-        let mut log_buffer = Vec::with_capacity(log_length as usize);
-        log_buffer.set_len((log_length as usize) - 1); // subtract 1 to skip the trailing null character
-        gl::GetProgramInfoLog(program, log_length, ptr::null_mut(), log_buffer.as_mut_ptr() as *mut GLchar);
-        panic!("There was an error linking the shader: {}", str::from_utf8(&log_buffer).ok().expect("ProgramInfoLog not valid utf8"));
+        // Fail on error
+        if status != (gl::TRUE as GLint) {
+            let mut log_length: GLint = mem::uninitialized();
+            gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut log_length);
+            let mut log_buffer = Vec::with_capacity(log_length as usize);
+            log_buffer.set_len((log_length as usize) - 1); // subtract 1 to skip the trailing null character
+            gl::GetProgramInfoLog(program, log_length, ptr::null_mut(), log_buffer.as_mut_ptr() as *mut GLchar);
+            panic!("There was an error linking the shader: {}", str::from_utf8(&log_buffer).ok().expect("ProgramInfoLog not valid utf8"));
+        }
+        program
     }
-    program
 }
 
-pub unsafe fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
-    // Create Vertex Array Object
-    let mut vao: GLuint = mem::uninitialized();
-    #[cfg(feature = "debug_draw")]
-    println!("gl::GenVertexArrays(size:1, *vao)");
-    gl::GenVertexArrays(1, &mut vao);
-    #[cfg(feature = "debug_draw")]
-    println!("    vao -> {}", vao);
+pub fn use_program(program: GLuint) {
+    log_draw!("gl::UseProgram(program:{:?})", program);
+    unsafe {
+        gl::UseProgram(program);
+    };
+}
 
-    #[cfg(feature = "debug_draw")]
-    println!("gl::BindVertexArray({})", vao);
-    gl::BindVertexArray(vao);
+pub fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
+    unsafe {
+        // Create Vertex Array Object
+        let mut vao: GLuint = mem::uninitialized();
+        log_draw!("gl::GenVertexArrays(size:1, *vao)");
+        gl::GenVertexArrays(1, &mut vao);
+        log_draw!("    vao -> {}", vao);
 
-    // Create a Vertex Buffer Object and copy the vertex data to it.
-    let mut buffer: GLuint = mem::uninitialized();
-    #[cfg(feature = "debug_draw")]
-    println!("gl::GenBuffers(size:1, *buffer)");
-    gl::GenBuffers(1, &mut buffer);
-    #[cfg(feature = "debug_draw")]
-    println!("    buffer -> {}", buffer);
+        log_draw!("gl::BindVertexArray({})", vao);
+        gl::BindVertexArray(vao);
 
-    #[cfg(feature = "debug_draw")]
-    println!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:{:?})", buffer);
-    gl::BindBuffer(gl::ARRAY_BUFFER, buffer);
+        // Create a Vertex Buffer Object and copy the vertex data to it.
+        let mut buffer: GLuint = mem::uninitialized();
+        log_draw!("gl::GenBuffers(size:1, *buffer)");
+        gl::GenBuffers(1, &mut buffer);
+        log_draw!("    buffer -> {}", buffer);
 
-    let size = (vertex_data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr;
-    #[cfg(feature = "debug_draw")] {
-        println!(
+        log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:{:?})", buffer);
+        gl::BindBuffer(gl::ARRAY_BUFFER, buffer);
+
+        let size = (vertex_data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr;
+        log_draw!(
             "gl::BufferData(gl::ARRAY_BUFFER, size:{:?}, *data, gl::STATIC_DRAW)",
             size
         );
-        println!("    vertex_data: {:?}", vertex_data);
-        println!("    GLFloat size: {}", mem::size_of::<GLfloat>());
-    }
-    gl::BufferData(
-        gl::ARRAY_BUFFER,
-        size,
-        mem::transmute(&vertex_data[0]),
-        gl::STATIC_DRAW
-    );
+        log_draw!("    vertex_data: {:?}", vertex_data);
+        log_draw!("    GLFloat size: {}", mem::size_of::<GLfloat>());
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            size,
+            mem::transmute(&vertex_data[0]),
+            gl::STATIC_DRAW
+        );
 
-    // Make sure the gl state is clean.
-    // #[cfg(feature = "debug_draw")]
-    // println!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
-    // gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-    vao
+        // Make sure the gl state is clean.
+        // log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
+        // gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        vao
+    }
 }
 
-pub unsafe fn bind_attribute_buffer(
+pub fn bind_attribute_buffer(
     vao: GLuint,
     attribute_info: &AttributeInfo
 ) {
-    #[cfg(feature = "debug_draw")]
-    println!("gl::BindVertexArray({})", vao);
-    gl::BindVertexArray(vao);
+    unsafe {
+        log_draw!("gl::BindVertexArray({})", vao);
+        gl::BindVertexArray(vao);
 
-    // Bind the buffer of data that's going in that slot.
-    // #[cfg(feature = "debug_draw")]
-    // println!("gl::BindBuffer(gl::ARRAY_BUFFER, {})", vbo);
-    // gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        // Bind the buffer of data that's going in that slot.
+        // log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, {})", vbo);
+        // gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
 
-    // Enable the slot in the shader for this attribute.
-    #[cfg(feature = "debug_draw")]
-    println!("gl::EnableVertexAttribArray({})", attribute_info.index);
-    gl::EnableVertexAttribArray(attribute_info.index);
+        // Enable the slot in the shader for this attribute.
+        log_draw!("gl::EnableVertexAttribArray({})", attribute_info.index);
+        gl::EnableVertexAttribArray(attribute_info.index);
 
-    // Define how the pointers look up the information in the buffer.
-    #[cfg(feature = "debug_draw")]
-    println!(
-        "gl::VertexAttribPointer(index:{}, size:{}, type:{}, normalize:gl::FALSE, stride:0,\
-        \n                        offset: ptr::null())",
-        attribute_info.index,
-        attribute_info.data_size,
-        gl_attribute_enum_to_string(attribute_info.data_type)
-    );
-    gl::VertexAttribPointer(
-        attribute_info.index,
-        attribute_info.data_size,
-        attribute_info.data_type,
-        gl::FALSE, // normalize
-        0, // stride
-        ptr::null() // offset
-        // (2 * mem::size_of::<f32>()) as *const () as *const _)
-    );
+        // Define how the pointers look up the information in the buffer.
+        log_draw!(
+            "gl::VertexAttribPointer(index:{}, size:{}, type:{}, normalize:gl::FALSE, stride:0,\
+            \n                        offset: ptr::null())",
+            attribute_info.index,
+            attribute_info.data_size,
+            gl_attribute_enum_to_string(attribute_info.data_type)
+        );
+        gl::VertexAttribPointer(
+            attribute_info.index,
+            attribute_info.data_size,
+            attribute_info.data_type,
+            gl::FALSE, // normalize
+            0, // stride
+            ptr::null() // offset
+            // (2 * mem::size_of::<f32>()) as *const () as *const _)
+        );
+    }
 }
 
-pub unsafe fn get_attribute_count(program: GLuint) -> GLint {
-    // Get the count of attributes in our shader.
-    let mut attribute_count: GLint = mem::uninitialized();
-    gl::GetProgramiv(program, gl::ACTIVE_ATTRIBUTES, &mut attribute_count);
-    attribute_count
+pub fn get_attribute_count(program: GLuint) -> GLint {
+    unsafe {
+        // Get the count of attributes in our shader.
+        let mut attribute_count: GLint = mem::uninitialized();
+        gl::GetProgramiv(program, gl::ACTIVE_ATTRIBUTES, &mut attribute_count);
+        attribute_count
+    }
 }
 
-pub unsafe fn get_attribute_info(
+pub fn get_attribute_info(
     program: GLuint,
     attribute_index: GLint
 ) -> AttributeInfo {
-    let max_name_length: GLsizei = 127;
-    let mut name_buffer: Vec<u8> = Vec::with_capacity(128);
+    unsafe {
+        let max_name_length: GLsizei = 127;
+        let mut name_buffer: Vec<u8> = Vec::with_capacity(128);
 
-    // Write the attribute information into these values.
-    let mut name_length: GLsizei = mem::uninitialized();
-    let mut data_size: GLint = mem::uninitialized();
-    let mut data_type: GLenum = mem::uninitialized();
+        // Write the attribute information into these values.
+        let mut name_length: GLsizei = mem::uninitialized();
+        let mut data_size: GLint = mem::uninitialized();
+        let mut data_type: GLenum = mem::uninitialized();
 
-    #[cfg(feature = "debug_draw")]
-    println!(
-        "gl::GetActiveAttrib(program:{}, attribute:{}, max_name_length:{}, *name_length, \
-        \n                    *data_size, *data_type, *name_buffer)",
-        program,
-        attribute_index as GLuint,
-        max_name_length
-    );
-    gl::GetActiveAttrib(
-        program,
-        attribute_index as GLuint,
-        max_name_length,
-        &mut name_length,
-        &mut data_size,
-        &mut data_type,
-        name_buffer.as_mut_ptr() as *mut gl::types::GLchar
-    );
+        log_draw!(
+            "gl::GetActiveAttrib(program:{}, attribute:{}, max_name_length:{}, *name_length, \
+            \n                    *data_size, *data_type, *name_buffer)",
+            program,
+            attribute_index as GLuint,
+            max_name_length
+        );
+        gl::GetActiveAttrib(
+            program,
+            attribute_index as GLuint,
+            max_name_length,
+            &mut name_length,
+            &mut data_size,
+            &mut data_type,
+            name_buffer.as_mut_ptr() as *mut gl::types::GLchar
+        );
 
-    name_buffer.set_len(name_length as usize);
-    let name = String::from_utf8(name_buffer).unwrap();
-    #[cfg(feature = "debug_draw")] {
-        println!("    name -> {:?}", name);
-        println!("    name_length -> {}", name_length);
-        println!("    data_size -> {}", data_size);
-        println!("    data_type -> {}", gl_attribute_enum_to_string(data_type));
+        name_buffer.set_len(name_length as usize);
+        let name = String::from_utf8(name_buffer).unwrap();
+        log_draw!("    name -> {:?}", name);
+        log_draw!("    name_length -> {}", name_length);
+        log_draw!("    data_size -> {}", data_size);
+        log_draw!("    data_type -> {}", gl_attribute_enum_to_string(data_type));
+
+        let info = AttributeInfo {
+            name: name,
+            index: attribute_index as GLuint,
+            data_type: get_attribute_type(data_type),
+            data_size: get_attribute_type_size(data_type),
+            type_enum: data_type
+        };
+
+        log_draw!("{:?}", info);
+
+        info
     }
-
-    let info = AttributeInfo {
-        name: name,
-        index: attribute_index as GLuint,
-        data_type: get_attribute_type(data_type),
-        data_size: get_attribute_type_size(data_type),
-        type_enum: data_type
-    };
-
-    #[cfg(feature = "debug_draw")]
-    println!("{:?}", info);
-
-    info
 }
 
 pub fn get_program_attributes(program: GLuint) -> Vec<AttributeInfo> {
     let mut attributes: Vec<AttributeInfo> = Vec::new();
-    let attribute_count = unsafe { get_attribute_count(program) };
+    let attribute_count = get_attribute_count(program);
     for attribute_index in 0..attribute_count {
-        let attribute_info = unsafe { get_attribute_info(program, attribute_index) };
+        let attribute_info = get_attribute_info(program, attribute_index);
         if attribute_info.name.starts_with("gl_") {
             continue;
         }
@@ -349,6 +345,18 @@ pub fn get_attribute_type(data_type: GLenum) -> GLenum {
     }
 }
 
+pub fn draw_arrays(mode: GLenum, start: GLint, count: GLsizei) {
+    unsafe {
+        log_draw!(
+            "gl::DrawArrays({}, {}, {:?})",
+            gl_draw_mode_enum_to_string(mode),
+            start,
+            count
+        );
+        gl::DrawArrays(mode, start, count)
+    }
+}
+
 pub fn gl_attribute_enum_to_string(data_type: GLenum) -> &'static str () {
     match data_type {
         gl::FLOAT => "gl::FLOAT",
@@ -385,6 +393,32 @@ pub fn gl_attribute_enum_to_string(data_type: GLenum) -> &'static str () {
         gl::DOUBLE_MAT3x4 => "gl::DOUBLE_MAT3x4",
         gl::DOUBLE_MAT4x2 => "gl::DOUBLE_MAT4x2",
         gl::DOUBLE_MAT4x3 => "gl::DOUBLE_MAT4x3",
-        _ => panic!("Unknown gl enum returned")
+        _ => panic!("Unknown gl attribute enum.")
+    }
+}
+
+pub fn gl_draw_mode_enum_to_string(data_type: GLenum) -> &'static str () {
+    match data_type {
+        gl::POINTS => "gl::POINTS",
+        gl::LINE_STRIP => "gl::LINE_STRIP",
+        gl::LINE_LOOP => "gl::LINE_LOOP",
+        gl::LINES => "gl::LINES",
+        gl::LINE_STRIP_ADJACENCY => "gl::LINE_STRIP_ADJACENCY",
+        gl::LINES_ADJACENCY => "gl::LINES_ADJACENCY",
+        gl::TRIANGLE_STRIP => "gl::TRIANGLE_STRIP",
+        gl::TRIANGLE_FAN => "gl::TRIANGLE_FAN",
+        gl::TRIANGLES => "gl::TRIANGLES",
+        gl::TRIANGLE_STRIP_ADJACENCY => "gl::TRIANGLE_STRIP_ADJACENCY",
+        gl::TRIANGLES_ADJACENCY => "gl::TRIANGLES_ADJACENCY",
+        gl::PATCHES => "gl::PATCHES",
+        _ => panic!("Unknown gl draw mode enum.")
+    }
+}
+
+pub fn gl_shader_type_enum_to_string(shader_type: GLenum) -> &'static str () {
+    match shader_type {
+        gl::VERTEX_SHADER => "gl::VERTEX_SHADER",
+        gl::FRAGMENT_SHADER => "gl::FRAGMENT_SHADER",
+        _ => "Unknown shader type"
     }
 }
