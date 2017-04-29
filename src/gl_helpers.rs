@@ -111,15 +111,30 @@ pub unsafe fn link_program(vertex_shader: &GLuint, fragment_shader: &GLuint) -> 
 }
 
 pub unsafe fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
+    // Create Vertex Array Object
+    let mut vao: GLuint = mem::uninitialized();
+    #[cfg(feature = "debug_draw")]
+    println!("gl::GenVertexArrays(size:1, *vao)");
+    gl::GenVertexArrays(1, &mut vao);
+    #[cfg(feature = "debug_draw")]
+    println!("    vao -> {}", vao);
+
+    #[cfg(feature = "debug_draw")]
+    println!("gl::BindVertexArray({})", vao);
+    gl::BindVertexArray(vao);
+
     // Create a Vertex Buffer Object and copy the vertex data to it.
     let mut buffer: GLuint = mem::uninitialized();
     #[cfg(feature = "debug_draw")]
     println!("gl::GenBuffers(size:1, *buffer)");
     gl::GenBuffers(1, &mut buffer);
+    #[cfg(feature = "debug_draw")]
     println!("    buffer -> {}", buffer);
+
     #[cfg(feature = "debug_draw")]
     println!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:{:?})", buffer);
     gl::BindBuffer(gl::ARRAY_BUFFER, buffer);
+
     let size = (vertex_data.len() * mem::size_of::<GLfloat>()) as GLsizeiptr;
     #[cfg(feature = "debug_draw")] {
         println!(
@@ -137,23 +152,26 @@ pub unsafe fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
     );
 
     // Make sure the gl state is clean.
-    #[cfg(feature = "debug_draw")]
-    println!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
-    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-    buffer
+    // #[cfg(feature = "debug_draw")]
+    // println!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
+    // gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+    vao
 }
 
 pub unsafe fn bind_attribute_buffer(
-    vbo: GLuint,
+    vao: GLuint,
     attribute_info: &AttributeInfo
 ) {
-    // Bind the buffer of data that's going in that slot.
     #[cfg(feature = "debug_draw")]
-    println!("gl::BindBuffer(gl::ARRAY_BUFFER, {})", vbo);
-    gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+    println!("gl::BindVertexArray({})", vao);
+    gl::BindVertexArray(vao);
+
+    // Bind the buffer of data that's going in that slot.
+    // #[cfg(feature = "debug_draw")]
+    // println!("gl::BindBuffer(gl::ARRAY_BUFFER, {})", vbo);
+    // gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
 
     // Enable the slot in the shader for this attribute.
-    // TODO - This should be abstracted up above this function.
     #[cfg(feature = "debug_draw")]
     println!("gl::EnableVertexAttribArray({})", attribute_info.index);
     gl::EnableVertexAttribArray(attribute_info.index);

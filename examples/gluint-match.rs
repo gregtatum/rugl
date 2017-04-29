@@ -1,7 +1,8 @@
-
 extern crate gl;
 extern crate glutin;
+extern crate rugl;
 
+use rugl::gl_helpers;
 use gl::types::*;
 use std::mem;
 use std::ptr;
@@ -78,65 +79,38 @@ fn link_program(vs: GLuint, fs: GLuint) -> GLuint { unsafe {
 } }
 
 fn main() {
-    let window = glutin::Window::new().unwrap();
-
-    // It is essential to make the context current before calling `gl::load_with`.
-    unsafe { window.make_current() }.unwrap();
-
-    // Load the OpenGL function pointers
-    // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
-    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
+    let rugl = rugl::init();
 
     // Create GLSL shaders
-    let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
-    let fs = compile_shader(FS_SRC, gl::FRAGMENT_SHADER);
-    let program = link_program(vs, fs);
+    let vs = unsafe { gl_helpers::compile_shader(VS_SRC, gl::VERTEX_SHADER) };
+    let fs = unsafe { gl_helpers::compile_shader(FS_SRC, gl::FRAGMENT_SHADER) };
+    let program = unsafe { gl_helpers::link_program(&vs, &fs) };
 
     let mut vao = 0;
     let mut vbo = 0;
 
     unsafe {
-        // Create Vertex Array Object
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-
-        // Create a Vertex Buffer Object and copy the vertex data to it
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER,
-                       (VERTEX_DATA.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
-                       mem::transmute(&VERTEX_DATA[0]),
-                       gl::STATIC_DRAW);
+        let vao = gl_helpers::create_buffer(&VERTEX_DATA);
 
         // Use shader program
         gl::UseProgram(program);
-        gl::BindFragDataLocation(program, 0,
-                                 CString::new("out_color").unwrap().as_ptr());
 
-        // Specify the layout of the vertex data
-        let pos_attr = gl::GetAttribLocation(program,
-                                             CString::new("position").unwrap().as_ptr());
-        gl::EnableVertexAttribArray(pos_attr as GLuint);
-        gl::VertexAttribPointer(pos_attr as GLuint, 2, gl::FLOAT,
-                                gl::FALSE as GLboolean, 0, ptr::null());
+        let attribute_info = gl_helpers::get_attribute_info(program, 0);
+        // gl::BindFragDataLocation(program, 0, CString::new("out_color").unwrap().as_ptr());
+
+        gl_helpers::bind_attribute_buffer(vao, &attribute_info);
     }
 
-    for event in window.wait_events() {
+    rugl.frame(|| {
         unsafe {
             // Clear the screen to black
-            // gl::ClearColor(0.3, 0.3, 0.3, 1.0);
-            // gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::ClearColor(0.3, 0.3, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
 
             // Draw a triangle from the 3 vertices
             gl::DrawArrays(gl::TRIANGLES, 0, 3);
         }
-
-        window.swap_buffers().unwrap();
-
-        if let glutin::Event::Closed = event {
-            break;
-        }
-    }
+    });
 
     // Cleanup
     unsafe {

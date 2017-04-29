@@ -6,7 +6,7 @@ fn main() {
     let draw = rugl.draw()
         .vert("
             #version 150
-            in vec2 position;
+            in vec3 position;
             void main() {
                 gl_Position = vec4(position, 0.0, 1.0);
             }
@@ -27,9 +27,6 @@ fn main() {
         .finalize();
 
     rugl.frame(|| {
-        // draw();
-        // draw();
-        // draw();
         draw();
     });
 }
