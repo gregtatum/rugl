@@ -4,6 +4,7 @@
 
 use super::gl_helpers;
 use super::glutin;
+use super::buffers::BufferableData;
 use super::gl::types::*;
 use super::gl;
 use std::ffi::CString;
@@ -63,7 +64,7 @@ pub struct DrawConfig<'env> {
     pub environment: &'env Environment,
     pub vert: Option<&'static str>,
     pub frag: Option<&'static str>,
-    pub attributes: Vec<(String, Vec<GLfloat>)>,
+    pub attributes: Vec<(String, GLuint)>,
     pub count: i32
 }
 
@@ -94,9 +95,12 @@ impl<'env> DrawBuilder<'env> {
         self
     }
 
-    pub fn attribute(mut self, name: &str, vertices: Vec<GLfloat>) -> DrawBuilder<'env> {
+    pub fn attribute(
+        mut self, name: &str, vertices: &BufferableData
+    ) -> DrawBuilder<'env> {
+        // gl_helpers::log_draw!("Adding attribute {:?}", name);
         self.config.attributes.push(
-            (name.to_string(), vertices)
+            (name.to_string(), vertices.to_buffer())
         );
         self
     }
@@ -135,7 +139,7 @@ impl<'env> DrawBuilder<'env> {
                 });
 
             match attribute_config {
-                Some(&(_, ref values)) => { Some(gl_helpers::create_buffer(&values)) },
+                Some(&(_, ref buffer)) => { Some(*buffer) },
                 _ => None
             }
         }).collect();
@@ -143,7 +147,7 @@ impl<'env> DrawBuilder<'env> {
         let count = config.count;
 
         return Box::new(move || {
-            #[cfg(feature = "log_draw")]
+            #[cfg(feature = "debug_draw")]
             println!("----------------------------------------------------");
 
             match program {
@@ -155,7 +159,9 @@ impl<'env> DrawBuilder<'env> {
                 let attribute_info = programs_attributes.get(i).unwrap();
                 let buffer = buffers[i];
                 match buffer {
-                    Some(vbo) => gl_helpers::bind_attribute_buffer(vbo, attribute_info),
+                    // TODO - This is a bit of a lie, we should be passing in a single
+                    // vao for the entire set of buffers.
+                    Some(vao) => gl_helpers::bind_attribute_buffer(vao, attribute_info),
                     None => {}
                 }
             }

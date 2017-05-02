@@ -18,8 +18,8 @@ fn main() {
                 out_color = vec4(1.0, 1.0, 1.0, 1.0);
             }
         ")
-        .attribute("position", vec![
-             0.0,  0.5,
+        .attribute("position", &vec![
+             0.0f32,  0.5,
              0.5, -0.5,
             -0.5, -0.5
         ])
