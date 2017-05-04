@@ -12,6 +12,22 @@ impl BufferableData for Vec<f32> {
     }
 }
 
+/**
+ * For all the rest of the code, we have to unsafely transmute our Vec<[f32; N]>
+ * from a Vector, to a reference to slice. The actual data that the Vec points
+ * to in the heap is correctly laid out how we want to use it on the GL side.
+ * The basic process is to pull a pointer to our data, unsafely transmute_copy
+ * a pointer to it, removing the type from the compiler. Finally we pass that
+ * into the foreign function interface to be consumed by the gl state machine.
+ */
+
+/**
+ * TODO - Per jimb, consider moving the unsafe code:
+ *        impl ReshapeSlice<f32> for [f32;3]
+ *        and then `BufferableData` would just call `self.reshape`
+ *        or ReshapeSlice<f32>::reshape(self) for Universal Function Call Syntax
+ */
+
 impl BufferableData for Vec<[f32; 2]> {
     fn to_buffer(&self) -> GLuint {
         unsafe {

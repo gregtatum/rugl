@@ -117,16 +117,7 @@ pub fn use_program(program: GLuint) {
 
 pub fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
     unsafe {
-        // Create Vertex Array Object
-        let mut vao: GLuint = mem::uninitialized();
-        log_draw!("gl::GenVertexArrays(size:1, *vao)");
-        gl::GenVertexArrays(1, &mut vao);
-        log_draw!("    vao -> {}", vao);
-
-        log_draw!("gl::BindVertexArray({})", vao);
-        gl::BindVertexArray(vao);
-
-        // Create a Vertex Buffer Object and copy the vertex data to it.
+        // Create a vertex buffer object and copy the vertex data to it.
         let mut buffer: GLuint = mem::uninitialized();
         log_draw!("gl::GenBuffers(size:1, *buffer)");
         gl::GenBuffers(1, &mut buffer);
@@ -150,23 +141,39 @@ pub fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
         );
 
         // Make sure the gl state is clean.
-        // log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
-        // gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
+        buffer
+    }
+}
+
+pub fn create_vao() -> GLuint {
+    unsafe {
+        // Create Vertex Array Object
+        let mut vao: GLuint = mem::uninitialized();
+        log_draw!("gl::GenVertexArrays(size:1, *vao)");
+        gl::GenVertexArrays(1, &mut vao);
+        log_draw!("    vao -> {}", vao);
         vao
     }
 }
 
-pub fn bind_attribute_buffer(
-    vao: GLuint,
-    attribute_info: &AttributeInfo
-) {
+pub fn bind_vao(vao: GLuint) {
     unsafe {
         log_draw!("gl::BindVertexArray({})", vao);
         gl::BindVertexArray(vao);
+    }
+}
 
+pub fn bind_attribute_buffer(
+    vbo: GLuint,
+    attribute_info: &AttributeInfo
+) {
+    unsafe {
         // Bind the buffer of data that's going in that slot.
-        // log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, {})", vbo);
-        // gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, {})", vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
 
         // Enable the slot in the shader for this attribute.
         log_draw!("gl::EnableVertexAttribArray({})", attribute_info.index);

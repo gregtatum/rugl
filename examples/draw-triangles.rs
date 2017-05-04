@@ -2,15 +2,23 @@ extern crate rugl;
 
 fn main() {
     let rugl = rugl::init();
-    let count = 100;
+    let count = 10000;
 
     let draw = rugl.draw()
         .vert("
             #version 150
             in vec2 position;
             in float id;
+
+            float ROTATION_SPEED = 0.5;
+            float TRIANGLE_SIZE = 0.02;
+
             void main() {
-                gl_Position = vec4(position * 0.05, 0.0, 1.0);
+                vec2 position2 = position + vec2(
+                    cos(id * ROTATION_SPEED),
+                    sin(id * ROTATION_SPEED)
+                ) * sqrt(id);
+                gl_Position = vec4(position2 * TRIANGLE_SIZE, 0.0, 1.0);
             }
         ")
         .frag("
@@ -21,18 +29,17 @@ fn main() {
             }
         ")
         .attribute("id", {
-            &((0..count).map(|i| i as f32).collect::<Vec<f32>>())
+            &((0..count).map(|i| {
+                (i as f32 / 3.0).floor()
+            }).collect::<Vec<f32>>())
         })
         .attribute("position", {
             &((0..(count * 3)).map(|i| {
-                let id = (i as f32 / 3.0).floor() * 0.5;
-                let x = 5.0 * id.cos() * id.log10();
-                let y = 5.0 * id.sin() * id.log10();
                 // Equilateral triangle
                 match i % 3 {
-                    0 => [x + 0.0, y + 0.5],
-                    1 => [x + 0.36056, y + -0.5],
-                    2 => [x + -0.36056, y + -0.5],
+                    0 => [0.0, 0.5],
+                    1 => [0.36056, -0.5],
+                    2 => [-0.36056, -0.5],
                     _ => panic!("Math is hard.")
                 }
             }).collect::<Vec<[f32; 2]>>())

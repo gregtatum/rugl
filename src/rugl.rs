@@ -145,64 +145,43 @@ impl<'env> DrawBuilder<'env> {
         }).collect();
 
         let count = config.count;
+        let vao = match program {
+            Some(_) => {
+                // Create a vertex array object that stores all of the attributes and buffer
+                // information.
+                let vao = gl_helpers::create_vao();
+                gl_helpers::bind_vao(vao);
+
+                // Go through each attribute, and bind it to the proper slot with the
+                // proper shapes.
+                for i in 0..programs_attributes.len() {
+                    let attribute_info = programs_attributes.get(i).unwrap();
+                    let buffer = buffers[i];
+                    match buffer {
+                        Some(vbo) => gl_helpers::bind_attribute_buffer(vbo, attribute_info),
+                        None => {}
+                    }
+                }
+                // Un-bind the vao, now when we bind it again, it will restore the state
+                // of our shader.
+                gl_helpers::bind_vao(0);
+                Some(vao)
+            },
+            None => None
+        };
 
         return Box::new(move || {
             #[cfg(feature = "debug_draw")]
             println!("----------------------------------------------------");
 
             match program {
-                Some(program) => gl_helpers::use_program(program),
+                Some(program) => {
+                    gl_helpers::use_program(program);
+                    gl_helpers::bind_vao(vao.unwrap());
+                    gl_helpers::draw_arrays(gl::TRIANGLES, 0, count);
+                },
                 None => {}
             };
-
-            for i in 0..programs_attributes.len() {
-                let attribute_info = programs_attributes.get(i).unwrap();
-                let buffer = buffers[i];
-                match buffer {
-                    // TODO - This is a bit of a lie, we should be passing in a single
-                    // vao for the entire set of buffers.
-                    Some(vao) => gl_helpers::bind_attribute_buffer(vao, attribute_info),
-                    None => {}
-                }
-            }
-            gl_helpers::draw_arrays(gl::TRIANGLES, 0, count);
         })
-    }
-}
-
-#[cfg(test)]
-mod rugl_tests {
-    use super::*;
-
-    #[test]
-    fn test_the_buider_pattern() {
-        let rugl = Rugl::new();
-        let draw = rugl.draw()
-            .vert("
-                #version 150
-                in vec2 position;
-                in vec4 color;
-                void main() {
-                    gl_Position = vec4(position, color[1], 1.0);
-                }
-            ")
-            .frag("
-                #version 150
-                out vec4 out_color;
-                void main() {
-                    out_color = vec4(1.0, 1.0, 1.0, 1.0);
-                }
-            ")
-            .attribute("position", vec![
-                 0.0,  0.5,
-                 0.5, -0.5,
-                -0.5, -0.5
-            ])
-            .count(3)
-            .finalize();
-
-        rugl.frame(|| {
-            draw();
-        });
     }
 }
