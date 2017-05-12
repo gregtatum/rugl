@@ -13,7 +13,6 @@ fn main() {
             uniform float time;
             uniform float count;
 
-            float ROTATION_SPEED = 0.5;
             float TRIANGLE_SIZE = 0.02;
 
             void main() {
