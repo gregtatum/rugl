@@ -4,8 +4,10 @@ version = "0.1.0"
 authors = ["Greg Tatum <tatum.creative@gmail.com>"]
 
 [dependencies]
-glutin = "0.7.4"
+glutin = "0.8.0"
 gl = "0.6.1"
+time = "0.1"
 
 [features]
 log_draw = []
+draw_once = []
