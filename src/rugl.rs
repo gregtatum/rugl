@@ -34,13 +34,6 @@ pub fn init() -> Rugl {
     // Load the OpenGL function pointers
     gl::load_with(|ptr| window.get_proc_address(ptr) as *const _);
 
-    // let version = unsafe {
-    //     let data = CStr::from_ptr(gl.GetString(gl::VERSION) as *const _).to_bytes().to_vec();
-    //     String::from_utf8(data).unwrap()
-    // };
-
-    // println!("OpenGL version {}", version);
-
     Rugl {
         start_time: time::precise_time_s(),
         window: window,
@@ -83,8 +76,8 @@ impl Rugl {
             });
 
             let now = time::precise_time_s();
-            println!("update loop time:  {}ms", (now - previous_time) * 1000.0);
-            println!("-------------------------------------------------");
+            log_draw!("update loop time:  {}ms", (now - previous_time) * 1000.0);
+            log_draw!("-------------------------------------------------");
             previous_time = now;
             environment.time = now - start_time;
 
@@ -94,9 +87,10 @@ impl Rugl {
             }
             draw(&environment);
 
-            println!("draw time:         {}ms", (time::precise_time_s() - now) * 1000.0);
+            log_draw!("draw time:         {}ms", (time::precise_time_s() - now) * 1000.0);
             let _ = window.swap_buffers();
-            println!("swap buffers time: {}ms", (time::precise_time_s() - now) * 1000.0);
+
+            log_draw!("swap buffers time: {}ms", (time::precise_time_s() - now) * 1000.0);
         }
     }
 }

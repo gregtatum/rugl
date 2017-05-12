@@ -127,17 +127,14 @@ impl DrawBuilder {
         };
 
         // Match up the uniform setters with their appropriate uniform infos from the program.
-        println!("!!! looking into uniforms");
         let matched_uniform_setters = match program {
             Some(program) => {
                 let mut results = Vec::new();
                 let uniform_infos = gl_helpers::get_uniforms(program);
-                println!("!!! got uniform infos {:?}", uniform_infos);
                 for uniform_info in uniform_infos.iter() {
                     match config.uniform_setters.remove(&uniform_info.name) {
                         Some(setter) => {
                             let index = uniform_info.index as i32;
-                            println!("Matched the uniform {}", uniform_info.name);
                             results.push(
                                 Box::new(move |environment: &rugl::Environment| {
                                     (*setter(&environment)).set_uniform(index);

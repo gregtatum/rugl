@@ -302,8 +302,8 @@ pub fn get_uniform_info(
         let mut data_type: GLenum = mem::uninitialized();
 
         log_draw!(
-            "gl::GetActiveAttrib(program:{}, uniform:{}, max_name_length:{}, *name_length, \
-            \n                    *data_type, *name_buffer)",
+            "gl::GetActiveUniform(program:{}, uniform:{}, max_name_length:{}, *name_length, \
+            \n                    *data_size, *data_type, *name_buffer)",
             program,
             uniform_index as GLuint,
             max_name_length
@@ -356,7 +356,6 @@ pub fn get_program_attributes(program: GLuint) -> Vec<AttributeInfo> {
 pub fn get_uniforms(program: GLuint) -> Vec<UniformInfo> {
     let mut uniforms: Vec<UniformInfo> = Vec::new();
     let uniform_count = get_uniform_count(program);
-    println!("!!! uniform count {}", uniform_count);
     for uniform_index in 0..uniform_count {
         let uniform_info = get_uniform_info(program, uniform_index);
         uniforms.push(uniform_info);
