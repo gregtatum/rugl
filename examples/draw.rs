@@ -1,10 +1,10 @@
 extern crate rugl;
 
 fn main() {
-    let rugl = rugl::init();
-
-    let draw = rugl.draw()
-        .vert("
+    let mut rugl = rugl::init();
+    let draw = {
+        let mut builder = rugl.draw();
+        builder.vert("
             #version 150
             in vec2 position;
             void main() {
@@ -23,10 +23,10 @@ fn main() {
              0.5, -0.5,
             -0.5, -0.5
         ])
-        .count(3)
-        .finalize();
-
-    rugl.frame(|| {
-        draw();
+        .count(3);
+        builder.finalize()
+    };
+    rugl.frame(|env| {
+        draw(env);
     });
 }

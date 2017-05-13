@@ -49,9 +49,7 @@ impl Rugl {
         draw_builder::DrawBuilder::new()
     }
 
-    pub fn frame<F>(&mut self, draw: F) where
-        F: Fn(&Environment)
-    {
+    pub fn frame<F: Fn(&Environment)>(&mut self, draw: F) {
         let start_time = self.start_time;
         let mut previous_time = time::precise_time_s();
 
