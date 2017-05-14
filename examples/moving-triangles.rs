@@ -4,8 +4,9 @@ fn main() {
     let mut rugl = rugl::init();
     let count = 1000;
 
-    let draw = rugl.draw()
-        .vert("
+    let draw = {
+        let mut builder = rugl.draw();
+        builder.vert("
             #version 150
             in vec2 position;
             in float id;
@@ -38,7 +39,7 @@ fn main() {
         .uniform("time", Box::new(|env| Box::new(env.time as f32)))
         .uniform("count", {
             let count_in = count.clone() as f32;
-            Box::new(move |env| Box::new(count_in))
+            Box::new(move |_| Box::new(count_in))
         })
         .attribute("position", {
             &((0..(count * 3)).map(|i| {
@@ -56,8 +57,9 @@ fn main() {
                 (i as f32 / 3.0).floor()
             }).collect::<Vec<f32>>())
         })
-        .count(count * 3)
-        .finalize();
+        .count(count * 3);
+        builder.finalize()
+    };
 
     rugl.frame(|env| {
         draw(env);

@@ -4,8 +4,9 @@ fn main() {
     let mut rugl = rugl::init();
     let count = 10000;
 
-    let draw = rugl.draw()
-        .vert("
+    let draw = {
+        let mut builder = rugl.draw();
+        builder.vert("
             #version 150
             in vec2 position;
             in float id;
@@ -44,8 +45,9 @@ fn main() {
                 }
             }).collect::<Vec<[f32; 2]>>())
         })
-        .count(count)
-        .finalize();
+        .count(count);
+        builder.finalize()
+    };
 
     rugl.frame(|env| {
         draw(env);

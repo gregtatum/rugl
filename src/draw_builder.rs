@@ -36,24 +36,24 @@ impl DrawBuilder {
         }
     }
 
-    pub fn vert(mut self, source: &'static str) -> DrawBuilder {
+    pub fn vert(&mut self, source: &'static str) -> &mut DrawBuilder {
         self.config.vert = Some(source);
         self
     }
 
-    pub fn frag(mut self, source: &'static str) -> DrawBuilder {
+    pub fn frag(&mut self, source: &'static str) -> &mut DrawBuilder {
         self.config.frag = Some(source);
         self
     }
 
-    pub fn uniform(mut self, name: &str, setter: Box<Fn(&rugl::Environment) -> Box<UniformValue>>) -> DrawBuilder {
+    pub fn uniform(&mut self, name: &str, setter: Box<Fn(&rugl::Environment) -> Box<UniformValue>>) -> &mut DrawBuilder {
         self.config.uniform_setters.insert(name.to_string(), setter);
         self
     }
 
     pub fn attribute(
-        mut self, name: &str, vertices: &BufferableData
-    ) -> DrawBuilder {
+        &mut self, name: &str, vertices: &BufferableData
+    ) -> &mut DrawBuilder {
         // gl_helpers::log_draw!("Adding attribute {:?}", name);
         self.config.attributes.push(
             (name.to_string(), vertices.to_buffer())
@@ -61,7 +61,7 @@ impl DrawBuilder {
         self
     }
 
-    pub fn count(mut self, count: i32) -> DrawBuilder {
+    pub fn count(&mut self, count: i32) -> &mut DrawBuilder {
         self.config.count = count;
         self
     }
