@@ -1,7 +1,7 @@
 extern crate rugl;
 
 fn main() {
-    let rugl = rugl::init();
+    let mut rugl = rugl::init();
 
     let draw = rugl.draw()
         .vert("
@@ -26,7 +26,7 @@ fn main() {
         .count(3)
         .finalize();
 
-    rugl.frame(|| {
-        draw();
+    rugl.frame(|env| {
+        draw(env);
     });
 }
