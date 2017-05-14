@@ -60,18 +60,17 @@ impl Rugl {
         let ref window = self.window;
         let mut run_loop = true;
         while run_loop {
+            #[cfg(feature = "draw_once")] {
+                events_loop.interrupt();
+                run_loop = false;
+            }
             events_loop.poll_events(|event| {
                 match event {
                     glutin::Event::WindowEvent { event: glutin::WindowEvent::Closed, .. } => {
                         events_loop.interrupt();
                         run_loop = false;
                     },
-                    _ => {
-                        #[cfg(feature = "draw_once")] {
-                            events_loop.interrupt();
-                            run_loop = false;
-                        }
-                    }
+                    _ => {}
                 }
             });
 

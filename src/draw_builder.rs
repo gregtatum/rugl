@@ -135,9 +135,15 @@ impl DrawBuilder {
                     match config.uniform_setters.remove(&uniform_info.name) {
                         Some(setter) => {
                             let index = uniform_info.index as i32;
+                            let data_type = uniform_info.data_type;
+                            let data_size = uniform_info.data_size;
                             results.push(
                                 Box::new(move |environment: &rugl::Environment| {
-                                    (*setter(&environment)).set_uniform(index);
+                                    (*setter(&environment)).set_uniform(
+                                        index,
+                                        data_type,
+                                        data_size
+                                    );
                                 })
                             );
                         }

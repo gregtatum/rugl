@@ -38,12 +38,10 @@ impl fmt::Debug for AttributeInfo {
 pub struct UniformInfo {
     pub name: String,
     pub index: GLuint,
-    // The strict type enum, e.g. gl::FLOAT_VEC2
-    pub type_enum: GLenum,
-    // The type of the attribute, e.g. gl::FLOAT
+    // The type enum, e.g. gl::FLOAT_VEC2
     pub data_type: GLenum,
-    // How many of the types this has, e.g.
-    pub data_size: usize,
+    // The size of an array of values, typically 1.
+    pub data_size: i32,
 }
 
 impl fmt::Debug for UniformInfo {
@@ -52,12 +50,10 @@ impl fmt::Debug for UniformInfo {
             formatter,
             "UniformInfo {{\
             \n  name: \"{}\",\
-            \n  type_enum: {},\
             \n  data_type: {},\
             \n  data_size: {}\
             \n}}",
             self.name,
-            gl_attribute_enum_to_string(self.type_enum),
             gl_attribute_enum_to_string(self.data_type),
             self.data_size
         )
@@ -329,9 +325,8 @@ pub fn get_uniform_info(
         let info = UniformInfo {
             name: name,
             index: uniform_index as GLuint,
-            data_type: get_uniform_type(data_type),
-            data_size: get_uniform_type_size(data_type),
-            type_enum: data_type
+            data_type: data_type,
+            data_size: data_size
         };
 
         log_draw!("{:?}", info);
@@ -440,228 +435,6 @@ pub fn get_attribute_type(data_type: GLenum) -> GLenum {
         gl::DOUBLE_MAT4x2 => gl::DOUBLE,
         gl::DOUBLE_MAT4x3 => gl::DOUBLE,
         _ => panic!("Unknown gl enum returned")
-    }
-}
-
-pub fn get_uniform_type(uniform_type: GLenum) -> GLenum {
-    match uniform_type {
-        gl::FLOAT => gl::FLOAT,
-        gl::FLOAT_VEC2 => gl::FLOAT,
-        gl::FLOAT_VEC3 => gl::FLOAT,
-        gl::FLOAT_VEC4 => gl::FLOAT,
-        // gl::DOUBLE 	double
-        // gl::DOUBLE_VEC2 	dvec2
-        // gl::DOUBLE_VEC3 	dvec3
-        // gl::DOUBLE_VEC4 	dvec4
-        // gl::INT 	int
-        // gl::INT_VEC2 	ivec2
-        // gl::INT_VEC3 	ivec3
-        // gl::INT_VEC4 	ivec4
-        // gl::UNSIGNED_INT 	unsigned int
-        // gl::UNSIGNED_INT_VEC2 	uvec2
-        // gl::UNSIGNED_INT_VEC3 	uvec3
-        // gl::UNSIGNED_INT_VEC4 	uvec4
-        // gl::BOOL 	bool
-        // gl::BOOL_VEC2 	bvec2
-        // gl::BOOL_VEC3 	bvec3
-        // gl::BOOL_VEC4 	bvec4
-        // gl::FLOAT_MAT2 	mat2
-        // gl::FLOAT_MAT3 	mat3
-        // gl::FLOAT_MAT4 	mat4
-        // gl::FLOAT_MAT2x3 	mat2x3
-        // gl::FLOAT_MAT2x4 	mat2x4
-        // gl::FLOAT_MAT3x2 	mat3x2
-        // gl::FLOAT_MAT3x4 	mat3x4
-        // gl::FLOAT_MAT4x2 	mat4x2
-        // gl::FLOAT_MAT4x3 	mat4x3
-        // gl::DOUBLE_MAT2 	dmat2
-        // gl::DOUBLE_MAT3 	dmat3
-        // gl::DOUBLE_MAT4 	dmat4
-        // gl::DOUBLE_MAT2x3 	dmat2x3
-        // gl::DOUBLE_MAT2x4 	dmat2x4
-        // gl::DOUBLE_MAT3x2 	dmat3x2
-        // gl::DOUBLE_MAT3x4 	dmat3x4
-        // gl::DOUBLE_MAT4x2 	dmat4x2
-        // gl::DOUBLE_MAT4x3 	dmat4x3
-        // gl::SAMPLER_1D 	sampler1D
-        // gl::SAMPLER_2D 	sampler2D
-        // gl::SAMPLER_3D 	sampler3D
-        // gl::SAMPLER_CUBE 	samplerCube
-        // gl::SAMPLER_1D_SHADOW 	sampler1DShadow
-        // gl::SAMPLER_2D_SHADOW 	sampler2DShadow
-        // gl::SAMPLER_1D_ARRAY 	sampler1DArray
-        // gl::SAMPLER_2D_ARRAY 	sampler2DArray
-        // gl::SAMPLER_1D_ARRAY_SHADOW 	sampler1DArrayShadow
-        // gl::SAMPLER_2D_ARRAY_SHADOW 	sampler2DArrayShadow
-        // gl::SAMPLER_2D_MULTISAMPLE 	sampler2DMS
-        // gl::SAMPLER_2D_MULTISAMPLE_ARRAY 	sampler2DMSArray
-        // gl::SAMPLER_CUBE_SHADOW 	samplerCubeShadow
-        // gl::SAMPLER_BUFFER 	samplerBuffer
-        // gl::SAMPLER_2D_RECT 	sampler2DRect
-        // gl::SAMPLER_2D_RECT_SHADOW 	sampler2DRectShadow
-        // gl::INT_SAMPLER_1D 	isampler1D
-        // gl::INT_SAMPLER_2D 	isampler2D
-        // gl::INT_SAMPLER_3D 	isampler3D
-        // gl::INT_SAMPLER_CUBE 	isamplerCube
-        // gl::INT_SAMPLER_1D_ARRAY 	isampler1DArray
-        // gl::INT_SAMPLER_2D_ARRAY 	isampler2DArray
-        // gl::INT_SAMPLER_2D_MULTISAMPLE 	isampler2DMS
-        // gl::INT_SAMPLER_2D_MULTISAMPLE_ARRAY 	isampler2DMSArray
-        // gl::INT_SAMPLER_BUFFER 	isamplerBuffer
-        // gl::INT_SAMPLER_2D_RECT 	isampler2DRect
-        // gl::UNSIGNED_INT_SAMPLER_1D 	usampler1D
-        // gl::UNSIGNED_INT_SAMPLER_2D 	usampler2D
-        // gl::UNSIGNED_INT_SAMPLER_3D 	usampler3D
-        // gl::UNSIGNED_INT_SAMPLER_CUBE 	usamplerCube
-        // gl::UNSIGNED_INT_SAMPLER_1D_ARRAY 	usampler2DArray
-        // gl::UNSIGNED_INT_SAMPLER_2D_ARRAY 	usampler2DArray
-        // gl::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE 	usampler2DMS
-        // gl::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY 	usampler2DMSArray
-        // gl::UNSIGNED_INT_SAMPLER_BUFFER 	usamplerBuffer
-        // gl::UNSIGNED_INT_SAMPLER_2D_RECT 	usampler2DRect
-        // gl::IMAGE_1D 	image1D
-        // gl::IMAGE_2D 	image2D
-        // gl::IMAGE_3D 	image3D
-        // gl::IMAGE_2D_RECT 	image2DRect
-        // gl::IMAGE_CUBE 	imageCube
-        // gl::IMAGE_BUFFER 	imageBuffer
-        // gl::IMAGE_1D_ARRAY 	image1DArray
-        // gl::IMAGE_2D_ARRAY 	image2DArray
-        // gl::IMAGE_2D_MULTISAMPLE 	image2DMS
-        // gl::IMAGE_2D_MULTISAMPLE_ARRAY 	image2DMSArray
-        // gl::INT_IMAGE_1D 	iimage1D
-        // gl::INT_IMAGE_2D 	iimage2D
-        // gl::INT_IMAGE_3D 	iimage3D
-        // gl::INT_IMAGE_2D_RECT 	iimage2DRect
-        // gl::INT_IMAGE_CUBE 	iimageCube
-        // gl::INT_IMAGE_BUFFER 	iimageBuffer
-        // gl::INT_IMAGE_1D_ARRAY 	iimage1DArray
-        // gl::INT_IMAGE_2D_ARRAY 	iimage2DArray
-        // gl::INT_IMAGE_2D_MULTISAMPLE 	iimage2DMS
-        // gl::INT_IMAGE_2D_MULTISAMPLE_ARRAY 	iimage2DMSArray
-        // gl::UNSIGNED_INT_IMAGE_1D 	uimage1D
-        // gl::UNSIGNED_INT_IMAGE_2D 	uimage2D
-        // gl::UNSIGNED_INT_IMAGE_3D 	uimage3D
-        // gl::UNSIGNED_INT_IMAGE_2D_RECT 	uimage2DRect
-        // gl::UNSIGNED_INT_IMAGE_CUBE 	uimageCube
-        // gl::UNSIGNED_INT_IMAGE_BUFFER 	uimageBuffer
-        // gl::UNSIGNED_INT_IMAGE_1D_ARRAY 	uimage1DArray
-        // gl::UNSIGNED_INT_IMAGE_2D_ARRAY 	uimage2DArray
-        // gl::UNSIGNED_INT_IMAGE_2D_MULTISAMPLE 	uimage2DMS
-        // gl::UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY 	uimage2DMSArray
-        // gl::UNSIGNED_INT_ATOMIC_COUNTER 	atomic_uint
-        _ => panic!("TODO - Unsupported uniform type")
-    }
-}
-
-pub fn get_uniform_type_size(uniform_type: GLenum) -> usize {
-    match uniform_type {
-        gl::FLOAT => 1,
-        gl::FLOAT_VEC2 => 2,
-        gl::FLOAT_VEC3 => 3,
-        gl::FLOAT_VEC4 => 4,
-        // gl::DOUBLE 	double
-        // gl::DOUBLE_VEC2 	dvec2
-        // gl::DOUBLE_VEC3 	dvec3
-        // gl::DOUBLE_VEC4 	dvec4
-        // gl::INT 	int
-        // gl::INT_VEC2 	ivec2
-        // gl::INT_VEC3 	ivec3
-        // gl::INT_VEC4 	ivec4
-        // gl::UNSIGNED_INT 	unsigned int
-        // gl::UNSIGNED_INT_VEC2 	uvec2
-        // gl::UNSIGNED_INT_VEC3 	uvec3
-        // gl::UNSIGNED_INT_VEC4 	uvec4
-        // gl::BOOL 	bool
-        // gl::BOOL_VEC2 	bvec2
-        // gl::BOOL_VEC3 	bvec3
-        // gl::BOOL_VEC4 	bvec4
-        // gl::FLOAT_MAT2 	mat2
-        // gl::FLOAT_MAT3 	mat3
-        // gl::FLOAT_MAT4 	mat4
-        // gl::FLOAT_MAT2x3 	mat2x3
-        // gl::FLOAT_MAT2x4 	mat2x4
-        // gl::FLOAT_MAT3x2 	mat3x2
-        // gl::FLOAT_MAT3x4 	mat3x4
-        // gl::FLOAT_MAT4x2 	mat4x2
-        // gl::FLOAT_MAT4x3 	mat4x3
-        // gl::DOUBLE_MAT2 	dmat2
-        // gl::DOUBLE_MAT3 	dmat3
-        // gl::DOUBLE_MAT4 	dmat4
-        // gl::DOUBLE_MAT2x3 	dmat2x3
-        // gl::DOUBLE_MAT2x4 	dmat2x4
-        // gl::DOUBLE_MAT3x2 	dmat3x2
-        // gl::DOUBLE_MAT3x4 	dmat3x4
-        // gl::DOUBLE_MAT4x2 	dmat4x2
-        // gl::DOUBLE_MAT4x3 	dmat4x3
-        // gl::SAMPLER_1D 	sampler1D
-        // gl::SAMPLER_2D 	sampler2D
-        // gl::SAMPLER_3D 	sampler3D
-        // gl::SAMPLER_CUBE 	samplerCube
-        // gl::SAMPLER_1D_SHADOW 	sampler1DShadow
-        // gl::SAMPLER_2D_SHADOW 	sampler2DShadow
-        // gl::SAMPLER_1D_ARRAY 	sampler1DArray
-        // gl::SAMPLER_2D_ARRAY 	sampler2DArray
-        // gl::SAMPLER_1D_ARRAY_SHADOW 	sampler1DArrayShadow
-        // gl::SAMPLER_2D_ARRAY_SHADOW 	sampler2DArrayShadow
-        // gl::SAMPLER_2D_MULTISAMPLE 	sampler2DMS
-        // gl::SAMPLER_2D_MULTISAMPLE_ARRAY 	sampler2DMSArray
-        // gl::SAMPLER_CUBE_SHADOW 	samplerCubeShadow
-        // gl::SAMPLER_BUFFER 	samplerBuffer
-        // gl::SAMPLER_2D_RECT 	sampler2DRect
-        // gl::SAMPLER_2D_RECT_SHADOW 	sampler2DRectShadow
-        // gl::INT_SAMPLER_1D 	isampler1D
-        // gl::INT_SAMPLER_2D 	isampler2D
-        // gl::INT_SAMPLER_3D 	isampler3D
-        // gl::INT_SAMPLER_CUBE 	isamplerCube
-        // gl::INT_SAMPLER_1D_ARRAY 	isampler1DArray
-        // gl::INT_SAMPLER_2D_ARRAY 	isampler2DArray
-        // gl::INT_SAMPLER_2D_MULTISAMPLE 	isampler2DMS
-        // gl::INT_SAMPLER_2D_MULTISAMPLE_ARRAY 	isampler2DMSArray
-        // gl::INT_SAMPLER_BUFFER 	isamplerBuffer
-        // gl::INT_SAMPLER_2D_RECT 	isampler2DRect
-        // gl::UNSIGNED_INT_SAMPLER_1D 	usampler1D
-        // gl::UNSIGNED_INT_SAMPLER_2D 	usampler2D
-        // gl::UNSIGNED_INT_SAMPLER_3D 	usampler3D
-        // gl::UNSIGNED_INT_SAMPLER_CUBE 	usamplerCube
-        // gl::UNSIGNED_INT_SAMPLER_1D_ARRAY 	usampler2DArray
-        // gl::UNSIGNED_INT_SAMPLER_2D_ARRAY 	usampler2DArray
-        // gl::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE 	usampler2DMS
-        // gl::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY 	usampler2DMSArray
-        // gl::UNSIGNED_INT_SAMPLER_BUFFER 	usamplerBuffer
-        // gl::UNSIGNED_INT_SAMPLER_2D_RECT 	usampler2DRect
-        // gl::IMAGE_1D 	image1D
-        // gl::IMAGE_2D 	image2D
-        // gl::IMAGE_3D 	image3D
-        // gl::IMAGE_2D_RECT 	image2DRect
-        // gl::IMAGE_CUBE 	imageCube
-        // gl::IMAGE_BUFFER 	imageBuffer
-        // gl::IMAGE_1D_ARRAY 	image1DArray
-        // gl::IMAGE_2D_ARRAY 	image2DArray
-        // gl::IMAGE_2D_MULTISAMPLE 	image2DMS
-        // gl::IMAGE_2D_MULTISAMPLE_ARRAY 	image2DMSArray
-        // gl::INT_IMAGE_1D 	iimage1D
-        // gl::INT_IMAGE_2D 	iimage2D
-        // gl::INT_IMAGE_3D 	iimage3D
-        // gl::INT_IMAGE_2D_RECT 	iimage2DRect
-        // gl::INT_IMAGE_CUBE 	iimageCube
-        // gl::INT_IMAGE_BUFFER 	iimageBuffer
-        // gl::INT_IMAGE_1D_ARRAY 	iimage1DArray
-        // gl::INT_IMAGE_2D_ARRAY 	iimage2DArray
-        // gl::INT_IMAGE_2D_MULTISAMPLE 	iimage2DMS
-        // gl::INT_IMAGE_2D_MULTISAMPLE_ARRAY 	iimage2DMSArray
-        // gl::UNSIGNED_INT_IMAGE_1D 	uimage1D
-        // gl::UNSIGNED_INT_IMAGE_2D 	uimage2D
-        // gl::UNSIGNED_INT_IMAGE_3D 	uimage3D
-        // gl::UNSIGNED_INT_IMAGE_2D_RECT 	uimage2DRect
-        // gl::UNSIGNED_INT_IMAGE_CUBE 	uimageCube
-        // gl::UNSIGNED_INT_IMAGE_BUFFER 	uimageBuffer
-        // gl::UNSIGNED_INT_IMAGE_1D_ARRAY 	uimage1DArray
-        // gl::UNSIGNED_INT_IMAGE_2D_ARRAY 	uimage2DArray
-        // gl::UNSIGNED_INT_IMAGE_2D_MULTISAMPLE 	uimage2DMS
-        // gl::UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY 	uimage2DMSArray
-        // gl::UNSIGNED_INT_ATOMIC_COUNTER 	atomic_uint
-        _ => panic!("TODO - Unsupported uniform type")
     }
 }
 
