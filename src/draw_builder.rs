@@ -1,21 +1,24 @@
 use super::gl_helpers;
-use super::buffers::BufferableData;
+use super::buffers::{BufferableData, BufferableElementsData};
 use super::gl::types::*;
 use super::gl;
 use super::rugl;
 use super::uniforms::UniformValue;
+use super::Primitive;
 use std::collections::HashMap;
 use std::string;
+use std::ptr;
 
 pub struct DrawConfig<> {
     pub vert: Option<&'static str>,
     pub frag: Option<&'static str>,
     pub attributes: Vec<(String, GLuint)>,
+    pub elements: Option<GLuint>,
     pub uniform_setters: HashMap<
         String,
-        Box<Fn(&rugl::Environment) -> Box<UniformValue>>
+        Box<FnMut(&rugl::Environment) -> Box<UniformValue>>
     >,
-    // pub uniforms: Vec<(String, GL
+    pub primitive: Primitive,
     pub count: i32
 }
 
@@ -30,7 +33,9 @@ impl DrawBuilder {
                 vert: None,
                 frag: None,
                 attributes: Vec::new(),
+                elements: None,
                 uniform_setters: HashMap::new(),
+                primitive: Primitive::Triangles,
                 count: 0
             }
         }
@@ -46,7 +51,7 @@ impl DrawBuilder {
         self
     }
 
-    pub fn uniform(mut self, name: &str, setter: Box<Fn(&rugl::Environment) -> Box<UniformValue>>) -> DrawBuilder {
+    pub fn uniform(mut self, name: &str, setter: Box<FnMut(&rugl::Environment) -> Box<UniformValue>>) -> DrawBuilder {
         self.config.uniform_setters.insert(name.to_string(), setter);
         self
     }
@@ -54,10 +59,25 @@ impl DrawBuilder {
     pub fn attribute(
         mut self, name: &str, vertices: &BufferableData
     ) -> DrawBuilder {
-        // gl_helpers::log_draw!("Adding attribute {:?}", name);
         self.config.attributes.push(
             (name.to_string(), vertices.to_buffer())
         );
+        self
+    }
+
+    pub fn primitive(mut self, primitive: Primitive) -> DrawBuilder {
+        match self.config.elements {
+            Some(_) => panic!(".primitive() must be called before .elements() in order to properly create a buffer from a borrowed value."),
+            None => { self.config.primitive = primitive }
+        };
+        self
+    }
+
+    pub fn elements(
+        mut self, elements: &BufferableElementsData
+    ) -> DrawBuilder {
+        self.config.elements = Some(elements.to_buffer(&self.config.primitive));
+        self.config.count = elements.get_count(&self.config.primitive);
         self
     }
 
@@ -66,7 +86,7 @@ impl DrawBuilder {
         self
     }
 
-    pub fn finalize(self) -> Box<Fn(&rugl::Environment)> {
+    pub fn finalize(self) -> Box<FnMut(&rugl::Environment)> {
         let mut config = self.config;
         let vertex_shader = match config.vert {
             Some(vert) => Some(gl_helpers::compile_shader(vert, gl::VERTEX_SHADER)),
@@ -101,6 +121,14 @@ impl DrawBuilder {
         }).collect();
 
         let count = config.count;
+
+        let do_draw_elements = match config.elements {
+            Some(_) => true,
+            None => false
+        };
+
+        let draw_mode = config.primitive.to_gl_enum();
+
         let vao = match program {
             Some(_) => {
                 // Create a vertex array object that stores all of the attributes and buffer
@@ -118,6 +146,15 @@ impl DrawBuilder {
                         None => {}
                     }
                 }
+
+                match config.elements {
+                    Some(elements) => {
+                        log_draw!("gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, {:?})", elements);
+                        unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, elements) }
+                    },
+                    None => {}
+                }
+
                 // Un-bind the vao, now when we bind it again, it will restore the state
                 // of our shader.
                 gl_helpers::bind_vao(0);
@@ -165,7 +202,11 @@ impl DrawBuilder {
                         setter(environment);
                     }
                     gl_helpers::bind_vao(vao.unwrap());
-                    gl_helpers::draw_arrays(gl::TRIANGLES, 0, count);
+
+                    match do_draw_elements {
+                        true => gl_helpers::draw_elements(draw_mode, count),
+                        false => gl_helpers::draw_arrays(draw_mode, 0, count)
+                    };
                 },
                 None => {}
             };

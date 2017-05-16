@@ -164,6 +164,40 @@ pub fn create_buffer(vertex_data: &[GLfloat]) -> GLuint {
     }
 }
 
+// TODO - De-duplicate this code so that it works with both GLfloat and GLuint.
+pub fn create_buffer_u32(vertex_data: &[GLuint]) -> GLuint {
+    unsafe {
+        // Create a vertex buffer object and copy the vertex data to it.
+        let mut buffer: GLuint = mem::uninitialized();
+        log_draw!("gl::GenBuffers(size:1, *buffer)");
+        gl::GenBuffers(1, &mut buffer);
+        log_draw!("    buffer -> {}", buffer);
+
+        log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:{:?})", buffer);
+        gl::BindBuffer(gl::ARRAY_BUFFER, buffer);
+
+        let size = (vertex_data.len() * mem::size_of::<GLuint>()) as GLsizeiptr;
+        log_draw!(
+            "gl::BufferData(gl::ARRAY_BUFFER, size:{:?}, *data, gl::STATIC_DRAW)",
+            size
+        );
+        // log_draw!("    vertex_data: {:?}", vertex_data);
+        log_draw!("    GLFloat size: {}", mem::size_of::<GLuint>());
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            size,
+            mem::transmute(&vertex_data[0]),
+            gl::STATIC_DRAW
+        );
+
+        // Make sure the gl state is clean.
+        log_draw!("gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)");
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
+        buffer
+    }
+}
+
 pub fn create_vao() -> GLuint {
     unsafe {
         // Create Vertex Array Object
@@ -447,6 +481,23 @@ pub fn draw_arrays(mode: GLenum, start: GLint, count: GLsizei) {
             count
         );
         gl::DrawArrays(mode, start, count)
+    }
+}
+
+pub fn draw_elements(mode: GLenum, count: GLsizei) {
+    unsafe {
+        log_draw!(
+            "gl::DrawElements({}, count:{:?}, gl::UNSIGNED_INT, offset:{:?})",
+            gl_draw_mode_enum_to_string(mode),,
+            count,
+            0
+        );
+        gl::DrawElements(
+            mode,
+            count,
+            gl::UNSIGNED_INT,
+            ptr::null_mut()
+        );
     }
 }
 

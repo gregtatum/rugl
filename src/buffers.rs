@@ -1,5 +1,7 @@
 use super::gl::types::*;
+use super::Primitive;
 use super::gl_helpers::create_buffer;
+use super::gl_helpers::create_buffer_u32;
 use std::mem;
 use std::slice;
 
@@ -101,6 +103,84 @@ impl BufferableData for Vec<[f32; 16]> {
                 self.len() * 16
             );
             create_buffer(&vec)
+        }
+    }
+}
+
+impl BufferableData for &'static [[f32; 3]] {
+    fn to_buffer(&self) -> GLuint {
+        unsafe {
+            let data: &[f32] = slice::from_raw_parts(
+                mem::transmute_copy::<*const [f32; 3], *mut f32>(&self.as_ptr()),
+                self.len() * 3
+            );
+            create_buffer(&data)
+        }
+    }
+}
+
+/**
+ * Enumerate options for buffers used as the elements in gl::DrawElements().
+ */
+pub trait BufferableElementsData {
+    fn to_buffer(&self, &Primitive) -> GLuint;
+    fn get_count(&self, &Primitive) -> GLint;
+}
+
+impl BufferableElementsData for Vec<u32> {
+    fn to_buffer(&self, _: &Primitive) -> GLuint {
+        create_buffer_u32(self)
+    }
+
+    fn get_count(&self, _: &Primitive) -> GLint {
+        self.len() as i32
+    }
+}
+
+impl BufferableElementsData for &'static [[u32; 2]] {
+    fn to_buffer(&self, primitive: &Primitive) -> GLuint {
+        match primitive {
+            &Primitive::Triangles => {
+                unsafe {
+                    let data: &[u32] = slice::from_raw_parts(
+                        mem::transmute_copy::<*const [u32; 2], *mut u32>(&self.as_ptr()),
+                        self.len() * 2
+                    );
+                    create_buffer_u32(&data)
+                }
+            },
+            _ => panic!("Trying to set element arrays that are not the valid type")
+        }
+    }
+
+    fn get_count(&self, primitive: &Primitive) -> GLint {
+        match primitive {
+            &Primitive::Lines => 2 * (self.len() as i32),
+            _ => panic!("Trying to get the count of an invalid combo of primitive and array type.")
+        }
+    }
+}
+
+impl BufferableElementsData for &'static [[u32; 3]] {
+    fn to_buffer(&self, primitive: &Primitive) -> GLuint {
+        match primitive {
+            &Primitive::Triangles => {
+                unsafe {
+                    let data: &[u32] = slice::from_raw_parts(
+                        mem::transmute_copy::<*const [u32; 3], *mut u32>(&self.as_ptr()),
+                        self.len() * 3
+                    );
+                    create_buffer_u32(&data)
+                }
+            },
+            _ => panic!("Trying to set element arrays that are not the valid type")
+        }
+    }
+
+    fn get_count(&self, primitive: &Primitive) -> GLint {
+        match primitive {
+            &Primitive::Triangles => 3 * (self.len() as i32),
+            _ => panic!("Trying to get the count of an invalid combo of primitive and array type.")
         }
     }
 }

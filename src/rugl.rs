@@ -11,6 +11,9 @@ use std::string;
 
 pub struct Environment {
     pub time: f64,
+    pub tick: u64,
+    pub viewport_width: u32,
+    pub viewport_height: u32,
 }
 
 pub struct Rugl {
@@ -34,12 +37,17 @@ pub fn init() -> Rugl {
     // Load the OpenGL function pointers
     gl::load_with(|ptr| window.get_proc_address(ptr) as *const _);
 
+    let (viewport_width, viewport_height) = window.get_inner_size_pixels().unwrap();
+
     Rugl {
         start_time: time::precise_time_s(),
         window: window,
         events_loop: events_loop,
         environment: Environment {
-            time: 0.0
+            time: 0.0,
+            tick: 0,
+            viewport_width: viewport_width,
+            viewport_height: viewport_height
         }
     }
 }
@@ -79,6 +87,7 @@ impl Rugl {
             log_draw!("-------------------------------------------------");
             previous_time = now;
             environment.time = now - start_time;
+            environment.tick += 1;
 
             unsafe {
                 gl::ClearColor(0.3, 0.2, 0.3, 1.0);
