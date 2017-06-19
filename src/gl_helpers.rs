@@ -312,7 +312,7 @@ pub fn get_attribute_info(
             type_enum: data_type
         };
 
-        log_draw!("{:?}", info);
+        // log_draw!("{:?}", info);
 
         info
     }
@@ -363,7 +363,7 @@ pub fn get_uniform_info(
             data_size: data_size
         };
 
-        log_draw!("{:?}", info);
+        // log_draw!("{:?}", info);
 
         info
     }
@@ -488,7 +488,7 @@ pub fn draw_elements(mode: GLenum, count: GLsizei) {
     unsafe {
         log_draw!(
             "gl::DrawElements({}, count:{:?}, gl::UNSIGNED_INT, offset:{:?})",
-            gl_draw_mode_enum_to_string(mode),,
+            gl_draw_mode_enum_to_string(mode),
             count,
             0
         );
@@ -498,6 +498,23 @@ pub fn draw_elements(mode: GLenum, count: GLsizei) {
             gl::UNSIGNED_INT,
             ptr::null_mut()
         );
+    }
+}
+
+
+pub fn get_major_version() -> i32 {
+    unsafe {
+        let mut major: GLint = mem::uninitialized();
+        gl::GetIntegerv(gl::MAJOR_VERSION, &mut major);
+        major as i32
+    }
+}
+
+pub fn get_minor_version() -> i32 {
+    unsafe {
+        let mut minor: GLint = mem::uninitialized();
+        gl::GetIntegerv(gl::MINOR_VERSION, &mut minor);
+        minor as i32
     }
 }
 

@@ -31,10 +31,16 @@ fn main() {
         .frag("
             #version 150
             out vec4 out_color;
+            uniform vec3 color;
+            uniform vec3 color2;
+            uniform vec3 color3;
             void main() {
-                out_color = vec4(1.0, 1.0, 1.0, 1.0);
+                out_color = vec4(color + color2 + color3, 1.0);
             }
         ")
+        .uniform("color", Box::new(|_| Box::new([1.0, 0.0, 0.0])))
+        .uniform("color2", Box::new(|_| Box::new([0.0, 1.0, 0.0])))
+        .uniform("color3", Box::new(|_| Box::new([0.0, 0.0, 1.0])))
         .uniform("time", Box::new(|env| Box::new(env.time as f32)))
         .uniform("count", {
             let count_in = count.clone() as f32;

@@ -1,0 +1,87 @@
+OpenGL Version 4.1
+gl::GenBuffers(size:1, *buffer)
+    buffer -> 1
+gl::BindBuffer(gl::ARRAY_BUFFER, buffer:1)
+gl::BufferData(gl::ARRAY_BUFFER, size:9504, *data, gl::STATIC_DRAW)
+    GLFloat size: 4
+gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)
+gl::GenBuffers(size:1, *buffer)
+    buffer -> 2
+gl::BindBuffer(gl::ARRAY_BUFFER, buffer:2)
+gl::BufferData(gl::ARRAY_BUFFER, size:11904, *data, gl::STATIC_DRAW)
+    GLFloat size: 4
+gl::BindBuffer(gl::ARRAY_BUFFER, buffer:0)
+gl::CreateShader(shader_type:gl::VERTEX_SHADER)
+gl::CreateShader -> 1
+"
+            #version 150
+            in vec3 position;
+            uniform mat4 projection;
+            uniform float time;
+
+            void main() {
+                projection[0];
+                gl_Position = vec4(0.05 * position + vec3(time, 0.0, 0.0), 1.0);
+            }
+
+"
+gl::ShaderSource(shader:1, count:1, source:0x102238000, ptr::null())
+gl::CompileShader(1)
+gl::GetShaderiv(shader:1, gl::COMPILE_STATUS, *status)
+    status -> 1
+gl::CreateShader(shader_type:gl::FRAGMENT_SHADER)
+gl::CreateShader -> 2
+"
+            #version 150
+            out vec4 out_color;
+            void main() {
+                out_color = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+
+"
+gl::ShaderSource(shader:2, count:1, source:0x1022230c0, ptr::null())
+gl::CompileShader(2)
+gl::GetShaderiv(shader:2, gl::COMPILE_STATUS, *status)
+    status -> 1
+gl::CreateProgram() -> 3
+gl::AttachShader(program:3, vertex_shader:1)
+gl::AttachShader(program:3, fragment_shader:2)
+gl::LinkProgram(program:3)
+gl::GetProgramiv(program:3, gl::LINK_STATUS, &mut status)
+    status -> 1
+gl::GetActiveAttrib(program:3, attribute:0, max_name_length:127, *name_length,
+                    *data_size, *data_type, *name_buffer)
+    name -> "position"
+    name_length -> 8
+    data_size -> 1
+    data_type -> gl::FLOAT_VEC3
+gl::GenVertexArrays(size:1, *vao)
+    vao -> 1
+gl::BindVertexArray(1)
+gl::BindBuffer(gl::ARRAY_BUFFER, 1)
+gl::EnableVertexAttribArray(0)
+gl::VertexAttribPointer(index:0, size:3, type:gl::FLOAT, normalize:gl::FALSE, stride:0,
+                        offset: ptr::null())
+gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 2)
+gl::BindVertexArray(0)
+gl::GetActiveUniform(program:3, uniform:0, max_name_length:127, *name_length,
+                    *data_size, *data_type, *name_buffer)
+    name -> "projection"
+    name_length -> 10
+    data_size -> 1
+    data_type -> gl::FLOAT_MAT4
+gl::GetActiveUniform(program:3, uniform:1, max_name_length:127, *name_length,
+                    *data_size, *data_type, *name_buffer)
+    name -> "time"
+    name_length -> 4
+    data_size -> 1
+    data_type -> gl::FLOAT
+update loop time:  68.0452500237152ms
+-------------------------------------------------
+gl::UseProgram(program:3)
+gl::BindVertexArray(1)
+gl::UniformMatrix4fv(location:0, count:1, transpose:false, *GLfloat) -> [1.3728658, 0, 0, 0, 0, 1.8304877, 0, 0, 0, 0, -1.002002, -1, 0, 0, -0.2002002, 0]
+gl::Uniform1f(location:1, 0.069852374)
+gl::DrawElements(gl::TRIANGLES, count:2976, gl::UNSIGNED_INT, offset:0)
+draw time:         2.538075961638242ms
+swap buffers time: 4.07383096171543ms

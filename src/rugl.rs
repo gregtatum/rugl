@@ -7,6 +7,7 @@ use super::glutin;
 use super::gl::types::*;
 use super::gl;
 use super::draw_builder;
+use super::gl_helpers;
 use std::string;
 
 pub struct Environment {
@@ -36,6 +37,12 @@ pub fn init() -> Rugl {
 
     // Load the OpenGL function pointers
     gl::load_with(|ptr| window.get_proc_address(ptr) as *const _);
+
+    log_draw!(
+        "OpenGL Version {}.{}",
+        gl_helpers::get_major_version(),
+        gl_helpers::get_minor_version()
+    );
 
     let (viewport_width, viewport_height) = window.get_inner_size_pixels().unwrap();
 

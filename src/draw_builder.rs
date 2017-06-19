@@ -16,7 +16,7 @@ pub struct DrawConfig<> {
     pub elements: Option<GLuint>,
     pub uniform_setters: HashMap<
         String,
-        Box<FnMut(&rugl::Environment) -> Box<UniformValue>>
+        Box<Fn(&rugl::Environment) -> Box<UniformValue>>
     >,
     pub primitive: Primitive,
     pub count: i32
@@ -51,7 +51,7 @@ impl DrawBuilder {
         self
     }
 
-    pub fn uniform(mut self, name: &str, setter: Box<FnMut(&rugl::Environment) -> Box<UniformValue>>) -> DrawBuilder {
+    pub fn uniform(mut self, name: &str, setter: Box<Fn(&rugl::Environment) -> Box<UniformValue>>) -> DrawBuilder {
         self.config.uniform_setters.insert(name.to_string(), setter);
         self
     }
@@ -86,7 +86,7 @@ impl DrawBuilder {
         self
     }
 
-    pub fn finalize(self) -> Box<FnMut(&rugl::Environment)> {
+    pub fn finalize(self) -> Box<Fn(&rugl::Environment)> {
         let mut config = self.config;
         let vertex_shader = match config.vert {
             Some(vert) => Some(gl_helpers::compile_shader(vert, gl::VERTEX_SHADER)),
@@ -176,11 +176,15 @@ impl DrawBuilder {
                             let data_size = uniform_info.data_size;
                             results.push(
                                 Box::new(move |environment: &rugl::Environment| {
-                                    (*setter(&environment)).set_uniform(
+                                    (
+                                        *setter(&environment)
+                                    )
+                                    .set_uniform(
                                         index,
                                         data_type,
                                         data_size
                                     );
+                                    check_gl_errors!();
                                 })
                             );
                         }
@@ -198,10 +202,10 @@ impl DrawBuilder {
             match program {
                 Some(program) => {
                     gl_helpers::use_program(program);
+                    gl_helpers::bind_vao(vao.unwrap());
                     for setter in matched_uniform_setters.iter() {
                         setter(environment);
                     }
-                    gl_helpers::bind_vao(vao.unwrap());
 
                     match do_draw_elements {
                         true => gl_helpers::draw_elements(draw_mode, count),

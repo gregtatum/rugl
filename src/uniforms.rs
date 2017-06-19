@@ -1,5 +1,6 @@
 use super::gl;
 use super::gl::types::*;
+use super::gl_helpers;
 
 pub trait UniformValue {
     fn set_uniform(&self, GLint, GLenum, i32);
@@ -10,6 +11,7 @@ impl UniformValue for f32 {
         debug_assert_eq!(data_type, gl::FLOAT);
         debug_assert_eq!(data_size, 1);
         log_draw!("gl::Uniform1f(location:{:?}, {:?})", location, self);
+        println!("{:?}", gl_helpers::get_uniform_info(3, location));
         unsafe {
             gl::Uniform1f(location, *self);
         }
@@ -221,7 +223,7 @@ impl UniformValue for Vec<[f32; 2]> {
 impl UniformValue for Vec<[f32; 3]> {
     fn set_uniform(&self, location: GLint, _: GLenum, _: i32) {
         unsafe {
-            log_draw!("gl::Uniform3fv(location:{:?}, {:?}, *GLfloat) -> {:?}", location, self.len(), self);
+            log_draw!("gl::Uniform3fv(location:{:?}, count:{:?}, *GLfloat) -> {:?}", location, self.len(), self);
             gl::Uniform3fv(
                 location,
                 self.len() as GLsizei,

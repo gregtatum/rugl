@@ -13,10 +13,13 @@ fn main() {
             #version 150
             in vec3 position;
             uniform mat4 projection;
+            uniform float time;
 
             void main() {
-                vec3 position2 = position * 0.05 + vec3(0.0, 0.0, -2.0);
-                gl_Position = projection * vec4(position2, 1.0);
+                gl_Position = vec4(
+                    0.05 * position + vec3(time, 0.0, 0.0),
+                    projection[0]
+                );
             }
         ")
         .frag("
@@ -28,18 +31,25 @@ fn main() {
         ")
         .attribute("position", &teapot::POSITIONS)
         .elements(&teapot::CELLS)
+        .uniform("time", Box::new(|env| {
+            Box::new(env.time as f32)
+        }))
+        // .uniform("view", {
+        //     // let eye = [0.0, 0.0, 20.0];
+        //     // let center = [0.0, 0.0, 0.0];
+        //     // let up = [0.0, 1.0, 0.0];
+        //     // Box::new(move |env| Box::new({
+        //     //     mat4::look_at(&eye, &center, &up)
+        //     // }))
+        //
+        //     Box::new(move |env| Box::new(mat4::identity()))
+        // })
         .uniform("projection", {
-            let mut mat = mat4::identity();
-            let mut width = 0;
-            let mut height = 0;
-            Box::new(move |env| {
-                if env.viewport_width != width || env.viewport_height != height {
-                    width = env.viewport_width;
-                    height = env.viewport_height;
-                    mat = mat4::perspective(1.0, 1.0, 0.1, 20.0);
-                }
-                Box::new(mat)
-            })
+            Box::new(move |env| Box::new({
+                let aspect = env.viewport_width as f32 / env.viewport_height as f32;
+                let fovy = 1.0;
+                mat4::perspective(fovy, aspect, 0.1, 100.0)
+            }))
         })
         .finalize();
 
