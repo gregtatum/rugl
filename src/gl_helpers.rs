@@ -38,6 +38,7 @@ impl fmt::Debug for AttributeInfo {
 pub struct UniformInfo {
     pub name: String,
     pub index: GLuint,
+    pub location: GLint,
     // The type enum, e.g. gl::FLOAT_VEC2
     pub data_type: GLenum,
     // The size of an array of values, typically 1.
@@ -349,8 +350,19 @@ pub fn get_uniform_info(
             name_buffer.as_mut_ptr() as *mut gl::types::GLchar
         );
 
+        // Pass a pointer to the name buffer, which should be a null-terminated string.
+        let location = gl::GetUniformLocation(program, name_buffer.as_mut_ptr() as *const GLchar);
+
+        // Extract the name as a Rust-native UTF-8 string.
         name_buffer.set_len(name_length as usize);
         let name = String::from_utf8(name_buffer).unwrap();
+
+        log_draw!(
+            "gl::GetUniformLocation(program:{}, name:\"{}\") -> {:?}",
+            program,
+            name,
+            location
+        );
         log_draw!("    name -> {:?}", name);
         log_draw!("    name_length -> {}", name_length);
         log_draw!("    data_size -> {}", data_size);
@@ -359,11 +371,10 @@ pub fn get_uniform_info(
         let info = UniformInfo {
             name: name,
             index: uniform_index as GLuint,
+            location: location,
             data_type: data_type,
             data_size: data_size
         };
-
-        // log_draw!("{:?}", info);
 
         info
     }

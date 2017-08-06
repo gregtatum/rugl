@@ -171,7 +171,7 @@ impl DrawBuilder {
                 for uniform_info in uniform_infos.iter() {
                     match config.uniform_setters.remove(&uniform_info.name) {
                         Some(setter) => {
-                            let index = uniform_info.index as i32;
+                            let location = uniform_info.location as i32;
                             let data_type = uniform_info.data_type;
                             let data_size = uniform_info.data_size;
                             results.push(
@@ -180,7 +180,7 @@ impl DrawBuilder {
                                         *setter(&environment)
                                     )
                                     .set_uniform(
-                                        index,
+                                        location,
                                         data_type,
                                         data_size
                                     );

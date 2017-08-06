@@ -49,7 +49,7 @@ macro_rules! check_gl_errors {
                         println!("  -> state of the GL is undefined, except for the state of the");
                         println!("  -> error flags, after this error is recorded.");
                     },
-                    gl::NO_ERROR => { println!("No error"); },
+                    gl::NO_ERROR => { println!("gl::glGetError() -> gl::NO_ERROR"); },
                     _ => {}
                 };
             }

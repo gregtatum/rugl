@@ -11,7 +11,6 @@ impl UniformValue for f32 {
         debug_assert_eq!(data_type, gl::FLOAT);
         debug_assert_eq!(data_size, 1);
         log_draw!("gl::Uniform1f(location:{:?}, {:?})", location, self);
-        println!("{:?}", gl_helpers::get_uniform_info(3, location));
         unsafe {
             gl::Uniform1f(location, *self);
         }
