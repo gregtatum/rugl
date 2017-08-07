@@ -147,6 +147,29 @@ pub fn look_at(eye: &Vec3, center: &Vec3, up: &Vec3) -> Mat4 {
     ]
 }
 
+pub fn rotate_y(a: &Mat4, rad: f32) -> Mat4 {
+    let s = rad.sin();
+    let c = rad.cos();
+    [
+        a[0] * c - a[8] * s,
+        a[1] * c - a[9] * s,
+        a[2] * c - a[10] * s,
+        a[3] * c - a[11] * s,
+        a[4],
+        a[5],
+        a[6],
+        a[7],
+        a[0] * s + a[8] * c,
+        a[1] * s + a[9] * c,
+        a[2] * s + a[10] * c,
+        a[3] * s + a[11] * c,
+        a[12],
+        a[13],
+        a[14],
+        a[15]
+    ]
+}
+
 #[cfg(test)]
 mod mat4_tests {
     use super::*;

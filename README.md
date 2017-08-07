@@ -6,5 +6,6 @@ This is an early experimental prototype for doing OpenGL in Rust using a similar
 * `cargo run --example draw`
 * `cargo run --example draw-triangles`
 * `cargo run --example moving-triangles`
+* `cargo run --example draw-teapot`
 
 MIT License

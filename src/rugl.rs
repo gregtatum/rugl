@@ -68,6 +68,7 @@ impl Rugl {
         F: Fn(&Environment)
     {
         let start_time = self.start_time;
+        #[allow(unused_variables)]
         let mut previous_time = time::precise_time_s();
 
         let ref mut environment = self.environment;
@@ -97,8 +98,13 @@ impl Rugl {
             environment.tick += 1;
 
             unsafe {
+                gl::Enable(gl::DEPTH_TEST);
+                gl::BlendFuncSeparate(gl::ONE, gl::ZERO, gl::ONE, gl::ZERO);
                 gl::ClearColor(0.3, 0.2, 0.3, 1.0);
-                gl::Clear(gl::COLOR_BUFFER_BIT);
+                gl::ClearDepth(1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+                gl::Enable(gl::CULL_FACE);
+
             }
             draw(&environment);
 
