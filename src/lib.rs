@@ -58,6 +58,7 @@ macro_rules! check_gl_errors {
 }
 
 pub mod draw_builder;
+pub mod clear_builder;
 pub mod gl_helpers;
 pub mod rugl;
 pub mod buffers;

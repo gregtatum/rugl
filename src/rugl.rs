@@ -7,6 +7,7 @@ use super::glutin;
 use super::gl::types::*;
 use super::gl;
 use super::draw_builder;
+use super::clear_builder;
 use super::gl_helpers;
 use std::string;
 
@@ -64,6 +65,10 @@ impl Rugl {
         draw_builder::DrawBuilder::new()
     }
 
+    pub fn clear(&self) -> clear_builder::Clear {
+        clear_builder::Clear::new()
+    }
+
     pub fn frame<F>(&mut self, draw: F) where
         F: Fn(&Environment)
     {
@@ -99,12 +104,9 @@ impl Rugl {
 
             unsafe {
                 gl::Enable(gl::DEPTH_TEST);
+                log_draw!("gl::Enable(gl::DEPTH_TEST)");
                 gl::BlendFuncSeparate(gl::ONE, gl::ZERO, gl::ONE, gl::ZERO);
-                gl::ClearColor(0.3, 0.2, 0.3, 1.0);
-                gl::ClearDepth(1.0);
-                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-                gl::Enable(gl::CULL_FACE);
-
+                log_draw!("gl::BlendFuncSeparate(gl::ONE, gl::ZERO, gl::ONE, gl::ZERO);");
             }
             draw(&environment);
 

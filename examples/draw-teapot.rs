@@ -64,7 +64,12 @@ fn main() {
         })
         .finalize();
 
+    let clear = rugl.clear()
+        .color([0.3, 0.2, 0.3, 1.0])
+        .depth(1.0);
+
     rugl.frame(|env| {
+        clear.execute();
         draw(env);
     });
 }
