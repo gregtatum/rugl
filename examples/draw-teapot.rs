@@ -4,6 +4,7 @@ use math::mat4;
 use models::teapot;
 use math::angle_normals;
 
+#[macro_use]
 extern crate rugl;
 
 fn main() {
@@ -64,12 +65,14 @@ fn main() {
         })
         .finalize();
 
-    let clear = rugl.clear()
-        .color([0.3, 0.2, 0.3, 1.0])
-        .depth(1.0);
+
+    let clear = rugl_clear!(
+        color => [0.3, 0.2, 0.3, 1.0],
+        depth => 1.0
+    );
 
     rugl.frame(|env| {
-        clear.execute();
+        clear();
         draw(env);
     });
 }

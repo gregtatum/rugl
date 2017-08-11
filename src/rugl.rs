@@ -7,7 +7,7 @@ use super::glutin;
 use super::gl::types::*;
 use super::gl;
 use super::draw_builder;
-use super::clear_builder;
+use super::clear;
 use super::gl_helpers;
 use std::string;
 
@@ -63,10 +63,6 @@ pub fn init() -> Rugl {
 impl Rugl {
     pub fn draw(&self) -> draw_builder::DrawBuilder {
         draw_builder::DrawBuilder::new()
-    }
-
-    pub fn clear(&self) -> clear_builder::Clear {
-        clear_builder::Clear::new()
     }
 
     pub fn frame<F>(&mut self, draw: F) where

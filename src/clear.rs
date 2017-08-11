@@ -2,39 +2,24 @@ use super::gl::types::*;
 use super::gl;
 
 pub struct Clear {
-    color_val: Option<[f32; 4]>,
-    depth_val: Option<f64>,
-    stencil_val: Option<i32>
+    pub color: Option<[f32; 4]>,
+    pub depth: Option<f64>,
+    pub stencil: Option<i32>
 }
 
 impl Clear {
     pub fn new() -> Clear {
         Clear {
-            color_val: None,
-            depth_val: None,
-            stencil_val: None
+            color: None,
+            depth: None,
+            stencil: None
         }
-    }
-
-    pub fn color(mut self, color: [f32; 4]) -> Clear {
-        self.color_val = Some(color);
-        self
-    }
-
-    pub fn depth(mut self, depth: f64) -> Clear {
-        self.depth_val = Some(depth);
-        self
-    }
-
-    pub fn stencil(mut self, stencil: i32) -> Clear {
-        self.stencil_val = Some(stencil);
-        self
     }
 
     pub fn execute(&self) {
         unsafe {
             let mut clear_bits: GLenum = 0;
-            match self.color_val {
+            match self.color {
                 Some(color) => {
                     clear_bits = clear_bits | gl::COLOR_BUFFER_BIT;
                     gl::ClearColor(color[0], color[1], color[2], color[3]);
@@ -42,7 +27,7 @@ impl Clear {
                 },
                 None => {},
             };
-            match self.depth_val {
+            match self.depth {
                 Some(depth) => {
                     clear_bits = clear_bits | gl::DEPTH_BUFFER_BIT;
                     gl::ClearDepth(depth);
@@ -50,7 +35,7 @@ impl Clear {
                 }
                 None => {}
             };
-            match self.stencil_val {
+            match self.stencil {
                 Some(stencil) => {
                     clear_bits = clear_bits | gl::STENCIL_BUFFER_BIT;
                     gl::ClearStencil(stencil);
@@ -63,4 +48,38 @@ impl Clear {
             }
         }
     }
+
+    pub fn get_execute_lambda(self) -> Box<Fn()> {
+        Box::new(move || self.execute())
+    }
+}
+
+#[macro_export]
+macro_rules! rugl_clear {
+    ($($key:ident => $value:expr),*) => {
+        {
+            let mut clear = $crate::clear::Clear::new();
+            $( rugl_clear_key_pair!(clear, $key => $value); )*
+            clear.get_execute_lambda()
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! rugl_clear_key_pair {
+    ($clear:expr, color => $value:expr) => {
+        match &mut $clear {
+            clear => clear.color = Some($value)
+        };
+    };
+    ($clear:expr, depth => $value:expr) => {
+        match &mut $clear {
+            clear => clear.depth = Some($value)
+        };
+    };
+    ($clear:expr, stencil => $value:expr) => {
+        match &mut $clear {
+            clear => clear.stencil = Some($value)
+        };
+    };
 }
