@@ -20,36 +20,36 @@ macro_rules! rugl {
 ///     extern crate rugl;
 ///
 ///     fn main() {
-///         let rugl = rugl::init();
+///         let rugl = rugl::init_headless();
 ///
 ///         // Create a clear command that clears the color, depth and stencil.
-///         let clearAll = rugl!(rugl.clear, {
+///         let clear_all = rugl!(rugl.clear, {
 ///             color => [0.0, 0.0, 0.0, 1.0],
 ///             depth => 1.0,
 ///             stencil => 0
 ///         });
 ///
 ///         // Create a clear command that clears only the color.
-///         let clearColorOnly = rugl!(rugl.clear, {
+///         let clear_only_color = rugl!(rugl.clear, {
 ///             color => [0.0, 0.0, 0.0, 1.0]
 ///         });
 ///     }
 ///
-/// Then run `clearAll()` or `clearColorOnly()` to run the command. The `rugl!` macro quickly
+/// Then run `clear_all()` or `clear_only_color()` to run the command. The `rugl!` macro quickly
 /// sets the values and returns a closure that can perform the action. While this is the preferred
 /// API, the `Clear` struct can be used by itself, especially if the clear command needs to be
 /// mutated over time.
 ///
 ///     use rugl;
-///     let rugl = rugl::init();
+///     let rugl = rugl::init_headless();
 ///
 ///     let mut clear = rugl.clear();
 ///     clear.color = Some([0.0, 0.0, 0.0, 1.0]);
 ///     clear.execute();
 ///
 ///     // The returned function assumes ownership of the Clear struct.
-///     let clearBlack = clear.make_execute_fn();
-///     clearBlack();
+///     let clear_black = clear.make_execute_fn();
+///     clear_black();
 ///
 pub struct Clear {
     /// Sets the clear color
