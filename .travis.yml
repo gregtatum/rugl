@@ -10,7 +10,7 @@ script:
   - RUST_BACKTRACE=1 cargo build --verbose
   - RUST_BACKTRACE=1 cargo test --verbose
 after_success: |
-    cargo doc \
+    cargo doc --no-deps \
     && echo '<meta http-equiv=refresh content=0;url=YOURLIBNAME/index.html>' > target/doc/index.html && \
     sudo pip install ghp-import && \
     ghp-import -n target/doc && \
