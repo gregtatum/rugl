@@ -9,3 +9,9 @@ matrix:
 script:
   - RUST_BACKTRACE=1 cargo build --verbose
   - RUST_BACKTRACE=1 cargo test --verbose
+after_success: |
+    cargo doc \
+    && echo '<meta http-equiv=refresh content=0;url=YOURLIBNAME/index.html>' > target/doc/index.html && \
+    sudo pip install ghp-import && \
+    ghp-import -n target/doc && \
+    git push -qf https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
