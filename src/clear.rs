@@ -1,13 +1,59 @@
 use super::gl::types::*;
 use super::gl;
 
+/// `rugl_clear!` combines `glClearColor`, `glClearDepth`, `glClearStencil` and `glClear` into a
+/// single procedure, which has the following usage:
+///
+///     let clear = rugl_clear!(
+///         color => [0.0, 0.0, 0.0, 1.0],
+///         depth: 1.0,
+///         stencil: 0
+///     );
+///
+///     clear();
+///
+/// If an option is not present, then the corresponding buffer is not cleared
+///
+/// | Property  | Type       | Description                  |
+/// | --------- | ---------- | ---------------------------- |
+/// | `color`   | `[f32; 4]` | Sets the clear color         |
+/// | `depth`   | `f64`      | Sets the clear depth value   |
+/// | `stencil` | `i32`      | Sets the clear stencil value |
+///
+/// See [rugl::Clear](./clear/index.html) for the backing implementation.
+
+#[macro_export]
+macro_rules! rugl_clear {
+    ($($key:ident => $value:expr),*) => {
+        {
+            let mut clear = $crate::clear::Clear::new();
+            $( clear.$key = Some($value); )*
+            clear.get_execute_lambda()
+        }
+    };
+}
+
+/// The backing struct for the `rugl_clear!` macro. It can be used as a mutable struct
+/// if needed, although the macro is the preferred usage.
+///
+///     let mut clear = Clear::new();
+///     clear.color = Some([0.0, 0.0, 0.0, 1.0]);
+///     clear.execute();
+///
+///     let clearBlack = clear.get_execute_lambda();
+///     clearBlack();
+///
 pub struct Clear {
+    /// Optionally sets the clear color
     pub color: Option<[f32; 4]>,
+    /// Optionally sets the clear depth value
     pub depth: Option<f64>,
+    /// Optionally sets the clear stencil value
     pub stencil: Option<i32>
 }
 
 impl Clear {
+    /// Create a new clear object.
     pub fn new() -> Clear {
         Clear {
             color: None,
@@ -16,6 +62,7 @@ impl Clear {
         }
     }
 
+    /// Execute the glClear with the set values.
     pub fn execute(&self) {
         unsafe {
             let mut clear_bits: GLenum = 0;
@@ -49,37 +96,29 @@ impl Clear {
         }
     }
 
+    /// Consume the struct and get a closure over `execute()`.
     pub fn get_execute_lambda(self) -> Box<Fn()> {
         Box::new(move || self.execute())
     }
 }
 
-#[macro_export]
-macro_rules! rugl_clear {
-    ($($key:ident => $value:expr),*) => {
-        {
-            let mut clear = $crate::clear::Clear::new();
-            $( rugl_clear_key_pair!(clear, $key => $value); )*
-            clear.get_execute_lambda()
-        }
-    };
-}
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn clear_on_a_macro() {
+        let clear1 = rugl_clear!(
+            color => [0.3, 0.2, 0.3, 1.0],
+            depth => 1.0,
+            stencil => 2
+        );
 
-#[macro_export]
-macro_rules! rugl_clear_key_pair {
-    ($clear:expr, color => $value:expr) => {
-        match &mut $clear {
-            clear => clear.color = Some($value)
-        };
-    };
-    ($clear:expr, depth => $value:expr) => {
-        match &mut $clear {
-            clear => clear.depth = Some($value)
-        };
-    };
-    ($clear:expr, stencil => $value:expr) => {
-        match &mut $clear {
-            clear => clear.stencil = Some($value)
-        };
-    };
+        let clear2 = rugl_clear!(
+            color => [0.3, 0.2, 0.3, 1.0],
+            stencil => 2
+        );
+
+        let clear3 = rugl_clear!(
+            color => [0.3, 0.2, 0.3, 1.0]
+        );
+    }
 }
