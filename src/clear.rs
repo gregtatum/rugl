@@ -20,6 +20,7 @@ macro_rules! rugl {
 ///     extern crate rugl;
 ///
 ///     fn main() {
+///         // Use rugl::init() for your code.
 ///         let rugl = rugl::init_headless();
 ///
 ///         // Create a clear command that clears the color, depth and stencil.
@@ -45,11 +46,11 @@ macro_rules! rugl {
 ///
 ///     let mut clear = rugl.clear();
 ///     clear.color = Some([0.0, 0.0, 0.0, 1.0]);
-///     clear.execute();
+///     // clear.execute();
 ///
 ///     // The returned function assumes ownership of the Clear struct.
 ///     let clear_black = clear.make_execute_fn();
-///     clear_black();
+///     // clear_black();
 ///
 pub struct Clear {
     /// Sets the clear color
