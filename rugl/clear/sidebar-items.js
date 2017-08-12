@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Clear","`Clear` combines `glClearColor`, `glClearDepth`, `glClearStencil` and `glClear` into a single procedure, which has the following default usage:"]]});
