@@ -529,7 +529,7 @@ pub fn get_minor_version() -> i32 {
     }
 }
 
-pub fn gl_attribute_enum_to_string(data_type: GLenum) -> &'static str () {
+pub fn gl_attribute_enum_to_string(data_type: GLenum) -> &'static str {
     match data_type {
         gl::FLOAT => "gl::FLOAT",
         gl::FLOAT_VEC2 => "gl::FLOAT_VEC2",
@@ -569,7 +569,7 @@ pub fn gl_attribute_enum_to_string(data_type: GLenum) -> &'static str () {
     }
 }
 
-pub fn gl_draw_mode_enum_to_string(data_type: GLenum) -> &'static str () {
+pub fn gl_draw_mode_enum_to_string(data_type: GLenum) -> &'static str {
     match data_type {
         gl::POINTS => "gl::POINTS",
         gl::LINE_STRIP => "gl::LINE_STRIP",
@@ -587,7 +587,7 @@ pub fn gl_draw_mode_enum_to_string(data_type: GLenum) -> &'static str () {
     }
 }
 
-pub fn gl_shader_type_enum_to_string(shader_type: GLenum) -> &'static str () {
+pub fn gl_shader_type_enum_to_string(shader_type: GLenum) -> &'static str {
     match shader_type {
         gl::VERTEX_SHADER => "gl::VERTEX_SHADER",
         gl::FRAGMENT_SHADER => "gl::FRAGMENT_SHADER",
