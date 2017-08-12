@@ -17,7 +17,7 @@ pub struct Environment {
 pub struct Rugl {
     start_time: f64,
     window: Option<glutin::Window>,
-    events_loop: glutin::EventsLoop,
+    events_loop: Option<glutin::EventsLoop>,
     environment: Environment
 }
 
@@ -46,7 +46,7 @@ pub fn init() -> Rugl {
     Rugl {
         start_time: time::precise_time_s(),
         window: Some(window),
-        events_loop: events_loop,
+        events_loop: Some(events_loop),
         environment: Environment {
             time: 0.0,
             tick: 0,
@@ -60,7 +60,7 @@ pub fn init_headless() -> Rugl {
     Rugl {
         start_time: time::precise_time_s(),
         window: None,
-        events_loop: glutin::EventsLoop::new(),
+        events_loop: None,
         environment: Environment {
             time: 0.0,
             tick: 0,
@@ -89,9 +89,15 @@ impl Rugl {
         let mut previous_time = time::precise_time_s();
 
         let ref mut environment = self.environment;
-        let ref events_loop = self.events_loop;
-        match self.window {
-            Some(ref window) => {
+
+        match self {
+            // Only run the following code if this is a real instance. This code won't run
+            // if it's headless in the test suite.
+            &mut Rugl {
+                window: Some(ref window),
+                events_loop: Some(ref events_loop),
+                ..
+            } => {
                 let mut run_loop = true;
                 while run_loop {
                     #[cfg(feature = "draw_once")] {
@@ -129,7 +135,10 @@ impl Rugl {
                     log_draw!("swap buffers time: {}ms", (time::precise_time_s() - now) * 1000.0);
                 }
             }
-            None => {}
+            _ => {
+                // Do not do anything for now, but eventually it would be nice to track
+                // the GL state changes over time.
+            }
         };
     }
 }
