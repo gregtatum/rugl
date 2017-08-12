@@ -1,54 +1,62 @@
 use super::gl::types::*;
 use super::gl;
-
-/// `rugl_clear!` combines `glClearColor`, `glClearDepth`, `glClearStencil` and `glClear` into a
-/// single procedure, which has the following usage:
-///
-///     let clear = rugl_clear!(
-///         color => [0.0, 0.0, 0.0, 1.0],
-///         depth: 1.0,
-///         stencil: 0
-///     );
-///
-///     clear();
-///
-/// If an option is not present, then the corresponding buffer is not cleared
-///
-/// | Property  | Type       | Description                  |
-/// | --------- | ---------- | ---------------------------- |
-/// | `color`   | `[f32; 4]` | Sets the clear color         |
-/// | `depth`   | `f64`      | Sets the clear depth value   |
-/// | `stencil` | `i32`      | Sets the clear stencil value |
-///
-/// See [rugl::Clear](./clear/index.html) for the backing implementation.
+use super::rugl;
 
 #[macro_export]
-macro_rules! rugl_clear {
-    ($($key:ident => $value:expr),*) => {
+macro_rules! rugl {
+    ($rugl:ident.$method:ident, { $($key:ident => $value:expr),* }) => {
         {
-            let mut clear = $crate::clear::Clear::new();
-            $( clear.$key = Some($value); )*
-            clear.get_execute_lambda()
+            let mut tmp_struct = $rugl.$method();
+            $( tmp_struct.$key = Some($value); )*
+            tmp_struct.make_execute_fn()
         }
     };
 }
 
-/// The backing struct for the `rugl_clear!` macro. It can be used as a mutable struct
-/// if needed, although the macro is the preferred usage.
+/// `Clear` combines `glClearColor`, `glClearDepth`, `glClearStencil` and `glClear` into a
+/// single procedure, which has the following default usage:
 ///
-///     let mut clear = Clear::new();
+///     #[macro_use]
+///     extern crate rugl;
+///
+///     fn main() {
+///         let rugl = rugl::init();
+///
+///         // Create a clear command that clears the color, depth and stencil.
+///         let clearAll = rugl!(rugl.clear, {
+///             color => [0.0, 0.0, 0.0, 1.0],
+///             depth => 1.0,
+///             stencil => 0
+///         });
+///
+///         // Create a clear command that clears only the color.
+///         let clearColorOnly = rugl!(rugl.clear, {
+///             color => [0.0, 0.0, 0.0, 1.0]
+///         });
+///     }
+///
+/// Then run `clearAll()` or `clearColorOnly()` to run the command. The `rugl!` macro quickly
+/// sets the values and returns a closure that can perform the action. While this is the preferred
+/// API, the `Clear` struct can be used by itself, especially if the clear command needs to be
+/// mutated over time.
+///
+///     use rugl;
+///     let rugl = rugl::init();
+///
+///     let mut clear = rugl.clear();
 ///     clear.color = Some([0.0, 0.0, 0.0, 1.0]);
 ///     clear.execute();
 ///
-///     let clearBlack = clear.get_execute_lambda();
+///     // The returned function assumes ownership of the Clear struct.
+///     let clearBlack = clear.make_execute_fn();
 ///     clearBlack();
 ///
 pub struct Clear {
-    /// Optionally sets the clear color
+    /// Sets the clear color
     pub color: Option<[f32; 4]>,
-    /// Optionally sets the clear depth value
+    /// Sets the clear depth value
     pub depth: Option<f64>,
-    /// Optionally sets the clear stencil value
+    /// Sets the clear stencil value
     pub stencil: Option<i32>
 }
 
@@ -97,28 +105,50 @@ impl Clear {
     }
 
     /// Consume the struct and get a closure over `execute()`.
-    pub fn get_execute_lambda(self) -> Box<Fn()> {
+    pub fn make_execute_fn(self) -> Box<Fn()> {
         Box::new(move || self.execute())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::rugl::init_headless;
     #[test]
     fn clear_on_a_macro() {
-        let clear1 = rugl_clear!(
+        let rugl = init_headless();
+
+        #[allow(unused_variables)]
+        let clear1 = rugl!(rugl.clear, {
             color => [0.3, 0.2, 0.3, 1.0],
             depth => 1.0,
-            stencil => 2
-        );
+            stencil => 0
+        });
 
-        let clear2 = rugl_clear!(
+        #[allow(unused_variables)]
+        let clear2 = rugl!(rugl.clear, {
             color => [0.3, 0.2, 0.3, 1.0],
-            stencil => 2
-        );
+            stencil => 0
+        });
 
-        let clear3 = rugl_clear!(
+        #[allow(unused_variables)]
+        let clear2 = rugl!(rugl.clear, {
             color => [0.3, 0.2, 0.3, 1.0]
-        );
+        });
     }
+
+    #[test]
+    fn clear_by_object() {
+        let rugl = init_headless();
+
+        #[allow(unused_variables)]
+        let clear = {
+            let mut clear = rugl.clear();
+            clear.color = Some([0.3, 0.2, 0.3, 1.0]);
+            clear.depth = Some(1.0);
+            clear.stencil = Some(0);
+            clear.make_execute_fn()
+        };
+        // clear();
+    }
+
 }

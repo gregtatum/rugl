@@ -45,7 +45,7 @@ fn main() {
         .uniform("time", Box::new(|env| Box::new(env.time as f32)))
         .uniform("count", {
             let count_in = count.clone() as f32;
-            Box::new(move |env| Box::new(count_in))
+            Box::new(move |_| Box::new(count_in))
         })
         .attribute("position", {
             &((0..(count * 3)).map(|i| {
@@ -66,10 +66,10 @@ fn main() {
         .count(count * 3)
         .finalize();
 
-    let clear = rugl_clear!(
+    let clear = rugl!(rugl.clear, {
         color => [0.3, 0.2, 0.3, 1.0],
         depth => 1.0
-    );
+    });
 
     rugl.frame(|env| {
         clear();
