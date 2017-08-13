@@ -2,17 +2,6 @@ use super::gl::types::*;
 use super::gl;
 use super::rugl;
 
-#[macro_export]
-macro_rules! rugl {
-    ($rugl:ident.$method:ident, { $($key:ident => $value:expr),* }) => {
-        {
-            let mut tmp_struct = $rugl.$method();
-            $( tmp_struct.$key = Some($value); )*
-            tmp_struct.make_execute_fn()
-        }
-    };
-}
-
 /// `Clear` combines `glClearColor`, `glClearDepth`, `glClearStencil` and `glClear` into a
 /// single procedure, which has the following default usage:
 ///
@@ -58,7 +47,7 @@ pub struct Clear {
     /// Sets the clear depth value
     pub depth: Option<f64>,
     /// Sets the clear stencil value
-    pub stencil: Option<i32>
+    pub stencil: Option<i32>,
 }
 
 impl Clear {
@@ -67,7 +56,7 @@ impl Clear {
         Clear {
             color: None,
             depth: None,
-            stencil: None
+            stencil: None,
         }
     }
 
@@ -79,9 +68,15 @@ impl Clear {
                 Some(color) => {
                     clear_bits = clear_bits | gl::COLOR_BUFFER_BIT;
                     gl::ClearColor(color[0], color[1], color[2], color[3]);
-                    log_draw!("gl::ClearColor({}, {}, {}, {})", color[0], color[1], color[2], color[3]);
-                },
-                None => {},
+                    log_draw!(
+                        "gl::ClearColor({}, {}, {}, {})",
+                        color[0],
+                        color[1],
+                        color[2],
+                        color[3]
+                    );
+                }
+                None => {}
             };
             match self.depth {
                 Some(depth) => {
@@ -96,7 +91,7 @@ impl Clear {
                     clear_bits = clear_bits | gl::STENCIL_BUFFER_BIT;
                     gl::ClearStencil(stencil);
                     log_draw!("gl::ClearStencil({})", depth);
-                },
+                }
                 None => {}
             };
             if clear_bits != 0 {

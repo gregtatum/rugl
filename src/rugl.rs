@@ -2,10 +2,28 @@ extern crate time;
 use super::glutin;
 use super::gl::types::*;
 use super::gl;
-use super::draw_builder::DrawBuilder;
+use super::draw::Draw;
 use super::clear::Clear;
 use super::gl_helpers;
 use std::string;
+
+#[macro_export]
+macro_rules! rugl {
+    ($rugl:ident.draw, { $($key:ident => $value:tt),* }) => {
+        {
+            rugl_draw!($rugl, {
+                $($key => $value),*
+            })
+        }
+    };
+    ($rugl:ident.$method:ident, { $($key:ident => $value:expr),* }) => {
+        {
+            let mut tmp_struct = $rugl.$method();
+            $( tmp_struct.$key = Some($value); )*
+            tmp_struct.make_execute_fn()
+        }
+    };
+}
 
 pub struct Environment {
     pub time: f64,
@@ -71,9 +89,9 @@ pub fn init_headless() -> Rugl {
 }
 
 impl Rugl {
-    pub fn draw(&self) -> DrawBuilder {
+    pub fn draw(&self) -> Draw {
         // Eventually some shared state will be injected here.
-        DrawBuilder::new()
+        Draw::new()
     }
 
     pub fn clear(&self) -> Clear {
