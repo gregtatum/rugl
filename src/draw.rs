@@ -202,7 +202,7 @@ impl Draw {
 #[cfg(test)]
 #[macro_use]
 mod tests {
-    use super::rugl;
+    use super::*;
 
     static VERT: &str = "
         #version 150
@@ -220,7 +220,7 @@ mod tests {
     ";
 
     #[test]
-    fn empty_draw_macro() {
+    fn empty_macro() {
         let rugl = rugl::init_headless();
         #[allow(unused_variables)]
         let draw = rugl!(rugl.draw, {});
@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn draw_macro_with_shader() {
+    fn macro_with_shader() {
         let rugl = rugl::init_headless();
         #[allow(unused_variables)]
         let draw = rugl!(rugl.draw, {
@@ -264,10 +264,19 @@ mod tests {
     }
 
     #[test]
-    fn draw_macro_with_elements() {
+    #[should_panic]
+    fn macro_with_elements() {
         let rugl = rugl::init_headless();
         let draw = rugl!(rugl.draw, {
-            elements => &[0u32, 1, 2]
+            elements => { &vec![0u32, 1, 2] }
+        });
+    }
+
+    #[test]
+    fn macro_with_count() {
+        let rugl = rugl::init_headless();
+        let draw = rugl!(rugl.draw, {
+            count => 5
         });
     }
 }

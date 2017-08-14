@@ -30,6 +30,7 @@ macro_rules! rugl_draw {
     };
 }
 
+#[macro_export]
 macro_rules! rugl_draw_key_pair {
     // Match on attributes, go through each attribute and add them.
     (attributes, $draw:expr, { $($key:ident => $value:expr),* }) => {
@@ -53,6 +54,7 @@ macro_rules! rugl_draw_key_pair {
     // Setters
     (elements, $draw:expr, $value:expr) => { $draw.set_elements($value); };
     (primitive, $draw:expr, $value:expr) => { $draw.set_primitive($value); };
+    (count, $draw:expr, $value:expr) => { $draw.count = $value; };
     ($key:ident, $draw:expr, $value:expr) => { $draw.$key = Some($value); };
 }
 

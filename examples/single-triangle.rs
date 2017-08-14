@@ -4,7 +4,7 @@ extern crate rugl;
 fn main() {
     let mut rugl = rugl::init();
 
-    rugl!(rugl.draw, {
+    let draw_single_triangle = rugl!(rugl.draw, {
         vert => "
             #version 150
             in vec2 position;
@@ -19,12 +19,12 @@ fn main() {
                 out_color = vec4(1.0, 1.0, 1.0, 1.0);
             }
         ",
-        attribute => {
-            position => &vec![
+        attributes => {
+            position => {&vec![
                  0.0f32,  0.5,
                  0.5, -0.5,
                 -0.5, -0.5
-            ]
+            ]}
         },
         count => 3
     });
@@ -36,6 +36,6 @@ fn main() {
 
     rugl.frame(|env| {
         clear();
-        draw(env);
+        draw_single_triangle(env);
     });
 }

@@ -7,24 +7,6 @@ use super::clear::Clear;
 use super::gl_helpers;
 use std::string;
 
-#[macro_export]
-macro_rules! rugl {
-    ($rugl:ident.draw, { $($key:ident => $value:tt),* }) => {
-        {
-            rugl_draw!($rugl, {
-                $($key => $value),*
-            })
-        }
-    };
-    ($rugl:ident.$method:ident, { $($key:ident => $value:expr),* }) => {
-        {
-            let mut tmp_struct = $rugl.$method();
-            $( tmp_struct.$key = Some($value); )*
-            tmp_struct.make_execute_fn()
-        }
-    };
-}
-
 pub struct Environment {
     pub time: f64,
     pub tick: u64,
