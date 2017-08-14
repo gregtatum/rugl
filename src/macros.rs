@@ -39,7 +39,7 @@ macro_rules! rugl_draw_key_pair {
 
     // Match on uniforms, go through each uniform and add them.
     (uniforms, $draw:expr, { $($key:ident => $value:expr),* }) => {
-        $( $draw.add_uniform(stringify!($key), $value); )*
+        $( $draw.add_uniform(stringify!($key), Box::new($value)); )*
     };
 
 
