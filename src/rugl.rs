@@ -14,6 +14,9 @@ pub struct Environment {
     pub viewport_height: u32,
 }
 
+/// A struct that has methods for generating various lambdas for controlling OpenGL. The preferred
+/// usage is to create this through `rugl::init()` and then use the `rugl!` macro to create
+/// commands.
 pub struct Rugl {
     start_time: f64,
     window: Option<glutin::Window>,
@@ -21,6 +24,17 @@ pub struct Rugl {
     environment: Environment
 }
 
+/// Initiate rugl. This is used to create a new window and will eventually have configuration
+/// options. It returns a `Rugl` instance.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate rugl;
+/// # fn main() {
+/// let rugl = rugl::init_headless();
+/// # }
+/// ```
 pub fn init() -> Rugl {
     let events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
@@ -71,16 +85,55 @@ pub fn init_headless() -> Rugl {
 }
 
 impl Rugl {
+    /// Create a new draw command.
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rugl;
+    /// # fn main() {
+    /// // let rugl = rugl::init();
+    /// // let draw = rugl!(rugl.draw, {
+    /// //     // Configuration options go here.
+    /// // });
+    /// // draw();
+    /// # }
+
+    /// ```
     pub fn draw(&self) -> Draw {
         // Eventually some shared state will be injected here.
         Draw::new()
     }
 
+    /// Create a new clear command.
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rugl;
+    /// # fn main() {
+    /// // let rugl = rugl::init();
+    /// // let clear = rugl!(rugl.clear, {
+    /// //     // Configuration options go here.
+    /// // });
+    /// // clear();
+    /// # }
+    /// ```
     pub fn clear(&self) -> Clear {
         // Eventually some shared state will be injected here.
         Clear::new()
     }
 
+    /// Create a frame loop for running draw commands.
+    ///
+    /// ```
+    /// # #[macro_use] extern crate rugl;
+    /// # fn main() {
+    /// // let rugl = rugl::init();
+    /// // let clear = rugl!(rugl.clear, { /* omitted */ });
+    /// // let draw = rugl!(rugl.draw, { /* omitted */ });
+    /// // rugl.frame(|env| {
+    /// //     clear();
+    /// //     draw(env);
+    /// // });
+    /// # }
+    /// ```
     pub fn frame<F>(&mut self, draw: F) where
         F: Fn(&Environment)
     {

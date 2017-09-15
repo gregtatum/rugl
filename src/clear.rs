@@ -5,41 +5,45 @@ use super::rugl;
 /// `Clear` combines `glClearColor`, `glClearDepth`, `glClearStencil` and `glClear` into a
 /// single procedure, which has the following default usage:
 ///
-///     #[macro_use]
-///     extern crate rugl;
+/// ```
+/// #[macro_use] extern crate rugl;
 ///
-///     fn main() {
-///         // Use rugl::init() for your code.
-///         let rugl = rugl::init_headless();
+/// fn main() {
+///     // Use rugl::init() for your code.
+///     let rugl = rugl::rugl::init_headless();
 ///
-///         // Create a clear command that clears the color, depth and stencil.
-///         let clear_all = rugl!(rugl.clear, {
-///             color => [0.0, 0.0, 0.0, 1.0],
-///             depth => 1.0,
-///             stencil => 0
-///         });
+///     // Create a clear command that clears the color, depth and stencil.
+///     let clear_all = rugl!(rugl.clear, {
+///         color => [0.0, 0.0, 0.0, 1.0],
+///         depth => 1.0,
+///         stencil => 0
+///     });
 ///
-///         // Create a clear command that clears only the color.
-///         let clear_only_color = rugl!(rugl.clear, {
-///             color => [0.0, 0.0, 0.0, 1.0]
-///         });
-///     }
+///     // Create a clear command that clears only the color.
+///     let clear_only_color = rugl!(rugl.clear, {
+///         color => [0.0, 0.0, 0.0, 1.0]
+///     });
+/// }
+/// ```
 ///
 /// Then run `clear_all()` or `clear_only_color()` to run the command. The `rugl!` macro quickly
 /// sets the values and returns a closure that can perform the action. While this is the preferred
 /// API, the `Clear` struct can be used by itself, especially if the clear command needs to be
 /// mutated over time.
 ///
-///     use rugl;
-///     let rugl = rugl::init_headless();
+/// ```
+/// # #[macro_use] extern crate rugl;
+/// # fn main() {
+/// let rugl = rugl::init_headless();
 ///
-///     let mut clear = rugl.clear();
-///     clear.color = Some([0.0, 0.0, 0.0, 1.0]);
-///     // clear.execute();
+/// let mut clear = rugl.clear();
+/// clear.color = Some([0.0, 0.0, 0.0, 1.0]);
+/// // clear.execute();
 ///
-///     // The returned function assumes ownership of the Clear struct.
-///     let clear_black = clear.make_execute_fn();
-///     // clear_black();
+/// // The returned function assumes ownership of the Clear struct.
+/// let clear_black = clear.make_execute_fn();
+/// // clear_black();
+/// # }
 ///
 pub struct Clear {
     /// Sets the clear color

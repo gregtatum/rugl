@@ -1,3 +1,5 @@
+/// The preferred API for generating commands is to use the `rugl!` macro. This is a shorthand
+/// interface to declare descriptions of various commands.
 #[macro_export]
 macro_rules! rugl {
     ($rugl:ident.draw, { $($key:ident => $value:tt),* }) => {
@@ -16,6 +18,7 @@ macro_rules! rugl {
     };
 }
 
+/// Internal macro for `rugl!(rugl.draw, { ... })`
 #[macro_export]
 macro_rules! rugl_draw {
     // Take an instance of rugl::init, and { key => value }*.
@@ -30,6 +33,7 @@ macro_rules! rugl_draw {
     };
 }
 
+/// Internal macro for `rugl!(rugl.draw, { ... })`
 #[macro_export]
 macro_rules! rugl_draw_key_pair {
     // Match on attributes, go through each attribute and add them.

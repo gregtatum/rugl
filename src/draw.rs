@@ -240,10 +240,11 @@ mod tests {
     #[test]
     fn macro_with_uniforms() {
         let rugl = rugl::init_headless();
+        #[allow(unused_variables)]
         let draw = rugl!(rugl.draw, {
             uniforms => {
-                color => Box::new(|_| Box::new([1.0, 0.0, 0.0])),
-                color2 => Box::new(|_| Box::new([1.0, 0.0, 0.0]))
+                color => |_| Box::new([1.0, 0.0, 0.0]),
+                color2 => |_| Box::new([1.0, 0.0, 0.0])
             }
         });
     }
@@ -252,6 +253,7 @@ mod tests {
     #[should_panic]
     fn macro_with_attributes() {
         let rugl = rugl::init_headless();
+        #[allow(unused_variables)]
         let draw = rugl!(rugl.draw, {
             attributes => {
                 id => {
@@ -267,6 +269,7 @@ mod tests {
     #[should_panic]
     fn macro_with_elements() {
         let rugl = rugl::init_headless();
+        #[allow(unused_variables)]
         let draw = rugl!(rugl.draw, {
             elements => { &vec![0u32, 1, 2] }
         });
@@ -275,6 +278,7 @@ mod tests {
     #[test]
     fn macro_with_count() {
         let rugl = rugl::init_headless();
+        #[allow(unused_variables)]
         let draw = rugl!(rugl.draw, {
             count => 5
         });
