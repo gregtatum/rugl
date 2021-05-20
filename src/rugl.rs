@@ -6,6 +6,8 @@ use super::draw::Draw;
 use super::clear::Clear;
 use super::gl_helpers;
 use std::string;
+use super::context::{Context, LiveContext, HeadlessContext};
+use std::rc::Rc;
 
 pub struct Environment {
     pub time: f64,
@@ -21,7 +23,8 @@ pub struct Rugl {
     start_time: f64,
     window: Option<glutin::Window>,
     events_loop: Option<glutin::EventsLoop>,
-    environment: Environment
+    environment: Environment,
+    context: Rc<Context>,
 }
 
 /// Initiate rugl. This is used to create a new window and will eventually have configuration
@@ -61,6 +64,7 @@ pub fn init() -> Rugl {
         start_time: time::precise_time_s(),
         window: Some(window),
         events_loop: Some(events_loop),
+        context: Rc::new(LiveContext {}),
         environment: Environment {
             time: 0.0,
             tick: 0,
@@ -75,6 +79,7 @@ pub fn init_headless() -> Rugl {
         start_time: time::precise_time_s(),
         window: None,
         events_loop: None,
+        context: Rc::new(HeadlessContext {}),
         environment: Environment {
             time: 0.0,
             tick: 0,
@@ -117,7 +122,7 @@ impl Rugl {
     /// ```
     pub fn clear(&self) -> Clear {
         // Eventually some shared state will be injected here.
-        Clear::new()
+        Clear::new(self.context.clone())
     }
 
     /// Create a frame loop for running draw commands.
